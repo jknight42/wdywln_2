@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>WDYWLN App</title>
+    <link href="css/wdywln.css" media="all" rel="stylesheet" type="text/css"/>
+    <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+    <script src="js/underscore.js"></script>
+    <script src="http://www.parsecdn.com/js/parse-1.2.13.min.js"></script>
+    <script src="js/todos.js"></script>
+  </head>
+
+  <body>
+    <div id="fb-root"></div>
+    <script>
+      console.clear();
+      window.fbAsyncInit = function() {
+        Parse.FacebookUtils.init({
+            appId      : '807285922636423', // Facebook App ID
+            cookie     : true, // enable cookies to allow Parse to access the session
+            xfbml      : true  // parse XFBML
+        });
+         
+          // Additional initialization code here
+      };
+
+      (function(d, s, id){
+       var js, fjs = d.getElementsByTagName(s)[0];
+       if (d.getElementById(id)) {return;}
+       js = d.createElement(s); js.id = id;
+       js.src = "//connect.facebook.net/en_US/all.js";
+       fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+    </script>
+
+    <!-- WDYWLN App Interface -->
+
+    <div id="wdywln-app">
+      <div class="title">
+        <h1>What Did You Watch Last Night?</h1>
+      </div>
+
+      <div class="content">
+      </div>
+    </div>
+
+
+    <!-- Templates -->
+
+    <script type="text/template" id="login-template">
+      <header id="header"></header>
+       <div class="facebook-login">
+          <a href="#" class="facebook-login-button">Login with Facebook</a>
+        </div>
+    </script>
+
+    <script type="text/template" id="main-movies-template">
+      <div id="user-info">
+        Howdy <%= Parse.User.current().escape("firstName") %> (<a href="#" class="log-out">Log out</a>)
+      </div>
+
+      <div class="section">
+
+        <header id="header">
+          <input id="new-movie" placeholder="movie, tv show, etc. " type="text" />
+          <input type="checkbox" name="is-good" value="is-good">
+        </header>
+
+        <div id="your-movies-list-container">
+          <ul id="your-movies-list">
+            . . . 
+          </ul>
+        </div> 
+        <div id="friends-movies-list-container">
+          <ul id="friends-movies-list">
+              
+          </ul>
+        </div> 
+      </div>
+    </script>
+
+    <script type="text/template" id="item-template">
+      <li class="">
+      	<div class="view <% if(isGood) { %> its-good <% } %>" >
+      	  <label class="movie-content"><%= _.escape(title) %></label>
+      	</div>
+        <div class="edit" >
+          <input class="edit" value="<%= _.escape(title) %>">
+        </div>
+      	
+      </li>
+    </script>
+
+    <script type="text/template" id="signed-in-template">
+      <div id="user-info">
+        Howdy <%= Parse.User.current().escape("firstName") %> (<a href="#" class="log-out">Log out</a>)
+      </div>
+
+    </script>    
+    
+    <script type="text/template" id="friend-template">
+      <li class="">
+        A friend
+        
+      </li>
+    </script>
+
+    <script type="text/template" id="stats-template">
+      <footer id="footer">
+      </footer>
+    </script>
+
+  </body>
+
+</html>
