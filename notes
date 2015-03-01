@@ -1,0 +1,28 @@
+What am I trying to do? 
+
+Get movies from movie API
+- User searches, the results autopopulate as he types. 
+- Click a movie, it's added to your list. 
+
+Can we use a template for the movie results? 
+Maybe the same movie item template? 
+
+Can we use a non db data to populate the list? 
+- It is a DB, just not ours. 
+- We want to use an object to populate a list. 
+- But really, it's just a function that manually adds another LI, it's not Angular. 
+- 
+
+
+Movie Adding should be it's own view seperate from Movie Browsing. 
+
+Collections can be made manually? 
+
+
+var collection = new TestCollection();
+ 
+collection.add([
+  {"name": "Duke"},
+  {"name": "Scarlett"}
+]);
+

@@ -60,7 +60,14 @@ $(function() {
 
   });
 
-   var YourFriendsMovieList = Parse.Collection.extend({
+  var YourFriendsMovieList = Parse.Collection.extend({
+
+    // Reference to this collection's model.
+    model: Movie,
+
+  });
+
+  var AutofillMovieList = Parse.Collection.extend({
 
     // Reference to this collection's model.
     model: Movie,
@@ -194,7 +201,30 @@ $(function() {
       this.yourFriendsMovies.fetch();
 
       state.on("change", this.filter, this);
+
+
+      // Simple syntax to create a new subclass of Parse.Object.
+      var TestObject = Parse.Object.extend("TestObject");
+       
+      // // Create a new instance of that class.
+      // var gameScore = new GameScore();
+
+
+      // A Collection containing all instances of TestObject.
+      var TestCollection = Parse.Collection.extend({
+        model: TestObject
+      });
+      var collection = new TestCollection();
+      collection.add([
+        {"name": "Duke", "date":"1998"},
+        {"name": "Scarlett", "date":"2001"}
+      ]);
+
+      console.log("collection");
+      console.log(collection);
     },
+
+
 
     // Logs out the user and shows the login view
     logOut: function(e) {
@@ -207,9 +237,7 @@ $(function() {
     // Re-rendering the App just means refreshing the statistics -- the rest
     // of the app doesn't change.
     render: function() {
-
       this.delegateEvents();
-
     },
 
     // Add a single movie item to the list by creating a view for it, and
@@ -254,8 +282,30 @@ $(function() {
 
       this.input.val('');
     },
-
   });
+
+  var AddMovieView = Parse.View.extend({
+
+    // Delegated events for creating new items, and clearing completed ones.
+    events: {
+      "keypress #new-movie":  "createOnEnter",
+    },
+
+    el: ".add-movie-container",
+
+    initialize: function() {
+      console.log("AddMovieView init");
+      var self = this;
+
+      _.bindAll(this, 'addOne', 'addAll', 'createOnEnter');
+
+      // Main movies management template
+      
+      // this.$el.html(_.template($("#main-movies-template").html()));
+    }
+  });
+
+
 /***
  *    ##        #######   ######   #### ##    ##    ##     ## #### ######## ##      ## 
  *    ##       ##     ## ##    ##   ##  ###   ##    ##     ##  ##  ##       ##  ##  ## 
