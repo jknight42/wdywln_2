@@ -40,9 +40,12 @@
         <h1>What Did You Watch Last Night?</h1>
       </div>
 
-      <div class="add-movie-container">
-      </div>
+
       <div class="content">
+      </div>
+
+      <div class="add-movie-container">
+         
       </div>
     </div>
 
@@ -64,8 +67,7 @@
       <div class="section">
 
         <header id="header">
-          <input id="new-movie" placeholder="movie, tv show, etc. " type="text" />
-          <input type="checkbox" name="is-good" value="is-good">
+          
         </header>
 
         <div id="your-movies-list-container">
@@ -81,28 +83,31 @@
       </div>
     </script>
 
-    <script type="text/template" id="main-movies-template">
-    
+    <script type="text/template" id="add-movie-template">
+      <input id="new-movie" placeholder="movie, tv show, etc. " type="text" />
+      <input type="checkbox" name="is-good" value="is-good">
+      <ul id="autocomplete-list">
+
+      </ul>
     </script>
 
-    <script type="text/template" id="item-template">
-      <li class="">
-      	<div class="view <% if(isGood) { %> its-good <% } %>" >
-      	  <label class="movie-content"><%= _.escape(title) %></label>
-      	</div>
-        <div class="edit" >
-          <input class="edit" value="<%= _.escape(title) %>">
-        </div>
-      	
-      </li>
-    </script>
-
-    <script type="text/template" id="signed-in-template">
+     <script type="text/template" id="signed-in-template">
       <div id="user-info">
         Howdy <%= Parse.User.current().escape("firstName") %> (<a href="#" class="log-out">Log out</a>)
       </div>
 
     </script>    
+
+    
+    <script type="text/template" id="item-template">
+      <li class="">
+      	<div class="view <% if(isGood) { %> its-good <% } %>" >
+      	  <label class="movie-content"><%= _.escape(title) %></label>
+      	</div>
+      </li>
+    </script>
+
+   
     
     <script type="text/template" id="friend-template">
       <li class="">

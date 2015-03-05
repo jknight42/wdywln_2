@@ -146,11 +146,12 @@ $(function() {
  *    ##     ## ##     ##  ##  ##   ###      ## ##    ##  ##       ##  ##  ## 
  *    ##     ## ##     ## #### ##    ##       ###    #### ########  ###  ###  
  */
+
+  var theMainView;
   var MainView = Parse.View.extend({
 
     // Delegated events for creating new items, and clearing completed ones.
     events: {
-      "keypress #new-movie":  "createOnEnter",
       "click .log-out": "logOut",
     },
 
@@ -160,14 +161,11 @@ $(function() {
       console.log("MainView init");
       var self = this;
 
-      _.bindAll(this, 'addOne', 'addAll', 'friendsAddOne', 'friendsAddAll', 'render','logOut', 'createOnEnter');
+      _.bindAll(this, 'addOne', 'addAll', 'friendsAddOne', 'friendsAddAll', 'render','logOut');
 
       // Main movies management template
       
       this.$el.html(_.template($("#main-movies-template").html()));
-
-      this.input = this.$("#new-movie");
-      this.allCheckbox = this.$("#toggle-all")[0];
 
       var yourFriendsIds = Parse.User.current().get("friendIDs");
 
@@ -202,29 +200,7 @@ $(function() {
 
       state.on("change", this.filter, this);
 
-
-      // Simple syntax to create a new subclass of Parse.Object.
-      var TestObject = Parse.Object.extend("TestObject");
-       
-      // // Create a new instance of that class.
-      // var gameScore = new GameScore();
-
-
-      // A Collection containing all instances of TestObject.
-      var TestCollection = Parse.Collection.extend({
-        model: TestObject
-      });
-      var collection = new TestCollection();
-      collection.add([
-        {"name": "Duke", "date":"1998"},
-        {"name": "Scarlett", "date":"2001"}
-      ]);
-
-      console.log("collection");
-      console.log(collection);
     },
-
-
 
     // Logs out the user and shows the login view
     logOut: function(e) {
@@ -266,43 +242,120 @@ $(function() {
       this.yourFriendsMovies.each(this.friendsAddOne);
     },
 
-    createOnEnter: function(e) {
-      var self = this;
-      if (e.keyCode != 13) return;
+   
+  });
+/***
+ *       ###    ########  ########     ##     ##  #######  ##     ## #### ########    ##     ## #### ######## ##      ## 
+ *      ## ##   ##     ## ##     ##    ###   ### ##     ## ##     ##  ##  ##          ##     ##  ##  ##       ##  ##  ## 
+ *     ##   ##  ##     ## ##     ##    #### #### ##     ## ##     ##  ##  ##          ##     ##  ##  ##       ##  ##  ## 
+ *    ##     ## ##     ## ##     ##    ## ### ## ##     ## ##     ##  ##  ######      ##     ##  ##  ######   ##  ##  ## 
+ *    ######### ##     ## ##     ##    ##     ## ##     ##  ##   ##   ##  ##           ##   ##   ##  ##       ##  ##  ## 
+ *    ##     ## ##     ## ##     ##    ##     ## ##     ##   ## ##    ##  ##            ## ##    ##  ##       ##  ##  ## 
+ *    ##     ## ########  ########     ##     ##  #######     ###    #### ########       ###    #### ########  ###  ###  
+ */
+  var AddMovieView = Parse.View.extend({
 
+    events: {
+      "input input#new-movie":  "autoFillMovieNames",
+    },
+
+    el: ".add-movie-container",
+
+    initialize: function() {
+      var self = this;
+      this.input = this.$("#new-movie");
+      this.allCheckbox = this.$("#toggle-all")[0];
+
+      _.bindAll(this, 'addOne', 'autoFillMovieNames');
+
+      // Create our collection of Movies
+      this.yourMovies = new YourMovieList;
+
+      // Setup the query for the collection to look for Movies from the current user
+      this.yourMovies.query = new Parse.Query(Movie);
+      this.yourMovies.query.equalTo("user", Parse.User.current());
+        
+      this.yourMovies.bind('add',     this.addOne);
+      
+      this.$el.html(_.template($("#add-movie-template").html()));
+    },
+    addOne: function(movie) {
+      var view = new MovieView({model: movie});
+      this.$("#your-movies-list").append(view.render().el);
+    },
+    addMovieToList: function(theMovieName) {
+      this.yourMovies = new YourMovieList;
+
+      // Setup the query for the collection to look for Movies from the current user
+      this.yourMovies.query = new Parse.Query(Movie);
+      this.yourMovies.query.equalTo("user", Parse.User.current());
+
+      var movieName = theMovieName;
       var publicACL = new Parse.ACL();
       publicACL.setPublicReadAccess(true);
       this.yourMovies.create({
-        title: this.input.val(),
+        title:   movieName,
         done:    false,
         user:    Parse.User.current(),
         ACL:     publicACL,
         facebookID: Parse.User.current().escape("facebookID")
       });
 
-      this.input.val('');
     },
-  });
+    onMovieClick: function(e) {
 
-  var AddMovieView = Parse.View.extend({
-
-    // Delegated events for creating new items, and clearing completed ones.
-    events: {
-      "keypress #new-movie":  "createOnEnter",
+      e.data.addMovieViewScope.addMovieToList(e.data.title);
+                  
+      theMainView.initialize();
     },
-
-    el: ".add-movie-container",
-
-    initialize: function() {
-      console.log("AddMovieView init");
+    autoFillMovieNames: function(e) {
       var self = this;
+      if($("#new-movie").val().length > 3) {
+        $("#autocomplete-list").html('Searching ...');
 
-      _.bindAll(this, 'addOne', 'addAll', 'createOnEnter');
+        var dataObj = {
+          s : $("#new-movie").val(),
+          r: 'JSON'
+        };
+        
+        $.ajax({
+          type: 'GET',
+          data: dataObj,
+          url: 'http://www.omdbapi.com/',
+          dataType: 'jsonp',
+          success: function(jsonData)
+          {
+            $("#autocomplete-list").html('');
+            var tvAndMovieList = jsonData.Search;
+            if(tvAndMovieList) {
 
-      // Main movies management template
-      
-      // this.$el.html(_.template($("#main-movies-template").html()));
-    }
+              for (var i = 0; i < tvAndMovieList.length; i++) {
+
+                var currLi = $("<li/>");
+                // $("#autocomplete-list").append("<img src='"+tvAndMovieList.movies[i].posters.profile+"' />");
+                currLi.append("<a class='title' href='#'>"+tvAndMovieList[i].Title+"</a>");
+                var metadata = $("<div class='metadata' />");
+                currLi.append(metadata);
+                metadata.append("<div class='year'>"+tvAndMovieList[i].Year+"</div>");
+                metadata.append("<div class='type'>"+tvAndMovieList[i].Type+"</div>");
+
+                var movieDataObj = [];
+                movieDataObj.title = tvAndMovieList[i].Title;
+                movieDataObj.year = tvAndMovieList[i].Year;
+                movieDataObj.type = tvAndMovieList[i].Type;
+                movieDataObj.currLi = currLi;
+                movieDataObj.addMovieViewScope = self;
+                
+                currLi.on('click', movieDataObj, self.onMovieClick);
+                
+                $("#autocomplete-list").append(currLi);
+              };
+            }
+          }
+        });
+      }
+    },
+
   });
 
 
@@ -337,7 +390,10 @@ $(function() {
                 if (response && !response.error) {
                   Parse.User.current().save("firstName",response.first_name);
                   Parse.User.current().save("facebookID",response.id);
-                  new MainView();
+                  
+                  new AddMovieView();
+                  theMainView = new MainView();
+                  
                 } else {
                   console.log("Error:")
                   console.log(response.error)
@@ -393,7 +449,15 @@ $(function() {
       this.delegateEvents();
     }
   });
-
+/***
+ *     ######  ####  ######   ##    ## ########     #### ##    ##    ##     ## #### ######## ##      ## 
+ *    ##    ##  ##  ##    ##  ###   ## ##     ##     ##  ###   ##    ##     ##  ##  ##       ##  ##  ## 
+ *    ##        ##  ##        ####  ## ##     ##     ##  ####  ##    ##     ##  ##  ##       ##  ##  ## 
+ *     ######   ##  ##   #### ## ## ## ##     ##     ##  ## ## ##    ##     ##  ##  ######   ##  ##  ## 
+ *          ##  ##  ##    ##  ##  #### ##     ##     ##  ##  ####     ##   ##   ##  ##       ##  ##  ## 
+ *    ##    ##  ##  ##    ##  ##   ### ##     ##     ##  ##   ###      ## ##    ##  ##       ##  ##  ## 
+ *     ######  ####  ######   ##    ## ########     #### ##    ##       ###    #### ########  ###  ###  
+ */
   var SignedInView = Parse.View.extend({
 
     events: {
@@ -440,7 +504,8 @@ $(function() {
 
     render: function() {
       if (Parse.User.current()) {
-        new MainView();
+        new AddMovieView();
+        theMainView = new MainView();
       } else {
         new LogInView();
       }
