@@ -37,7 +37,7 @@
 
     <div id="wdywln-app">
       <div class="title">
-        <h1>What Did You Watch Last Night?</h1>
+        <h1>Whatchu Whatchu</h1>
       </div>
 
       <div class="add-movie-container">
@@ -112,11 +112,12 @@
 
     
     <script type="text/template" id="item-template">
-      <li class="">
       	<div class="view <% if(isGood) { %> its-good <% } %>" >
+          <div class="poster-container">
+            <img src="<% if(posterUrl) { %> <%= _.escape(posterUrl) %> <% } %>" style="width: 100px;" />
+          </div>
       	  <div class="title-content"><%= _.escape(title) %></div>
       	</div>
-      </li>
     </script>
 
    

@@ -23,7 +23,8 @@ $(function() {
       title: "empty..",
       year: 0000,
       type: "unknown",
-      isGood: false
+      isGood: false,
+      posterUrl: 'blank'
     },
 
     initialize: function() {
