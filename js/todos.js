@@ -96,14 +96,10 @@ $(function() {
 
     // The DOM events specific to an item.
     events: {
-      "click .toggle"              : "toggleDone",
-      "dblclick label.movie-content" : "edit",
-      "blur .edit"          : "close"
     },
 
     initialize: function() {
-      _.bindAll(this, 'render', 'close', 'remove');
-      this.model.bind('change', this.render);
+      _.bindAll(this, 'render',  'remove');
       this.model.bind('destroy', this.remove);
     },
 
@@ -111,22 +107,6 @@ $(function() {
       $(this.el).html(this.template(this.model.toJSON()));
       this.input = this.$('.edit');
       return this;
-    },
-
-    // Toggle the `"done"` state of the model.
-    toggleDone: function() {
-      this.model.toggle();
-    },
-
-    // Switch this view into `"editing"` mode, displaying the input field.
-    edit: function() {
-      $(this.el).addClass("editing");
-      this.input.focus();
-    },
-
-    close: function() {
-      this.model.save({content: this.input.val()});
-      $(this.el).removeClass("editing");
     },
 
     // Remove the item, destroy the model.
@@ -201,6 +181,12 @@ $(function() {
       state.on("change", this.filter, this);
 
     },
+    refreshMovies: function() {
+      // TODO:
+      // Seems like there should be a simpler way to refresh the movie list
+      // other than reinitializing the whole thing, but for now... 
+      this.initialize();
+    },
 
     // Logs out the user and shows the login view
     logOut: function(e) {
@@ -257,16 +243,19 @@ $(function() {
 
     events: {
       "input input#new-movie":  "autoFillMovieNames",
+      "click .like-answer": "likeAnswerClicked",
+      "click #autocomplete-list li": "movieClick"
     },
 
     el: ".add-movie-container",
 
     initialize: function() {
       var self = this;
+      this.newMovie = new Movie();
       this.input = this.$("#new-movie");
       this.allCheckbox = this.$("#toggle-all")[0];
 
-      _.bindAll(this, 'addOne', 'autoFillMovieNames');
+      _.bindAll(this, 'addOne', 'autoFillMovieNames','likeAnswerClicked','movieClick');
 
       // Create our collection of Movies
       this.yourMovies = new YourMovieList;
@@ -283,33 +272,101 @@ $(function() {
       var view = new MovieView({model: movie});
       this.$("#your-movies-list").append(view.render().el);
     },
-    addMovieToList: function(theMovieName) {
+    addMovieToList: function() {
       this.yourMovies = new YourMovieList;
 
       // Setup the query for the collection to look for Movies from the current user
       this.yourMovies.query = new Parse.Query(Movie);
       this.yourMovies.query.equalTo("user", Parse.User.current());
 
-      var movieName = theMovieName;
+      console.log("Saving..."); // TODO: Replace with loading GIF or some such thing. 
+      
+      var posterUrl = this.newMovie.get("posterUrl");
+
       var publicACL = new Parse.ACL();
       publicACL.setPublicReadAccess(true);
-      this.yourMovies.create({
-        title:   movieName,
-        done:    false,
-        user:    Parse.User.current(),
+      this.newMovie.save({
+        user: Parse.User.current(),
+        posterUrl: posterUrl,
         ACL:     publicACL,
         facebookID: Parse.User.current().escape("facebookID")
+      }, {
+        success: function(newMovie) {
+          // The object was saved successfully.
+          theMainView.refreshMovies();
+        },
+        error: function(newMovie, error) {
+          // The save failed.
+          // error is a Parse.Error with an error code and message.
+          console.log("Error saving");
+          console.log(error);
+          console.log(newMovie);
+        }
       });
+    },
+    getPoster: function() {
+      // GET MOVIE POSTER: 
+      // http://img.omdbapi.com/?i=tt2294629&apikey=24d1a7e9 
+      // http://www.omdbapi.com/?i=tt1127180&plot=short&r=json
+      var dataObj = {
+          i: this.newMovie.get("imdbId"),
+          apiKey: '24d1a7e9',
+          r: 'JSON'
+      }; 
+      var self = this;      
+      $.ajax({
+        type: 'GET',
+        async: false, 
+        data: dataObj,
+        url: 'http://www.omdbapi.com/',
+        dataType: 'jsonp',
+        success: function(jsonData) {
+          self.newMovie.set("posterUrl", jsonData.Poster);
+          self.addMovieToList();
+        },
+        error: function(error) {
+          console.log("Error with image")
+          console.log(error)
+        } 
+
+      });
+    },
+    movieClick: function(e) {
+      // Clear out autocomplete list & input box
+      $("#autocomplete-list").html('');
+      $("#new-movie").val('');
+
+      this.newMovie.set("title", $(e.currentTarget).attr("title") );
+      this.newMovie.set("type", $(e.currentTarget).attr("type"));
+      this.newMovie.set("year", +$(e.currentTarget).attr("year"));
+      this.newMovie.set("imdbId", $(e.currentTarget).attr("imdbId"));
+      this.showQuestionPart2();
+    },
+    likeAnswerClicked: function(e) {
+      var answerId = e.currentTarget.id;
+      if(answerId == 'liked-it') {
+        this.newMovie.set("isGood",true);
+      } else if(answerId == 'did-not-like-it') {
+        this.newMovie.set("isGood",false);
+      }
+      
+      $("#question-part-2").hide();
+      // this.addMovieToList();
+      this.getPoster();
 
     },
-    onMovieClick: function(e) {
-
-      e.data.addMovieViewScope.addMovieToList(e.data.title);
-                  
-      theMainView.initialize();
+    showQuestionPart2: function() {
+      $("#question-part-2").show();
+      
     },
     autoFillMovieNames: function(e) {
       var self = this;
+
+
+      if(typeof newMovie !== "undefined") {
+        newMovie = null;
+      }
+
       if($("#new-movie").val().length > 3) {
         $("#autocomplete-list").html('Searching ...');
 
@@ -339,15 +396,11 @@ $(function() {
                 metadata.append("<div class='year'>"+tvAndMovieList[i].Year+"</div>");
                 metadata.append("<div class='type'>"+tvAndMovieList[i].Type+"</div>");
 
-                var movieDataObj = [];
-                movieDataObj.title = tvAndMovieList[i].Title;
-                movieDataObj.year = tvAndMovieList[i].Year;
-                movieDataObj.type = tvAndMovieList[i].Type;
-                movieDataObj.currLi = currLi;
-                movieDataObj.addMovieViewScope = self;
-                
-                currLi.on('click', movieDataObj, self.onMovieClick);
-                
+                currLi.attr("title",tvAndMovieList[i].Title);
+                currLi.attr("year",tvAndMovieList[i].Year);
+                currLi.attr("type",tvAndMovieList[i].Type);
+                currLi.attr("imdbId",tvAndMovieList[i].imdbID);
+                                
                 $("#autocomplete-list").append(currLi);
               };
             }
