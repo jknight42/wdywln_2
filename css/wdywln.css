@@ -26,6 +26,10 @@ ul {
 #your-movies-list .its-good {
     /*border: 1px solid rgb(179, 179, 236);*/
 }
+#your-movies-list .its-not-good {
+    opacity: .1;
+}
+
 .poster-container {
     height: 150px;
 }

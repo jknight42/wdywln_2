@@ -68,17 +68,16 @@
         <header id="header">
           
         </header>
-
-        <div id="your-movies-list-container">
-          <h2>Your Movies</h2>
-          <ul id="your-movies-list">
-            . . . 
-          </ul>
-        </div> 
         <div id="friends-movies-list-container">
           <h2>Your Friends Movies</h2>
           <ul id="friends-movies-list">
               
+          </ul>
+        </div> 
+        <div id="your-movies-list-container">
+          <h2>Your Movies</h2>
+          <ul id="your-movies-list">
+            . . . 
           </ul>
         </div> 
       </div>
@@ -112,7 +111,7 @@
 
     
     <script type="text/template" id="item-template">
-      	<div class="view <% if(isGood) { %> its-good <% } %>" >
+      	<div class="view <% if(isGood) { %> its-good <% } else { %> its-not-good <% } %>" >
           <div class="poster-container">
             <img src="<% if(posterUrl) { %> <%= _.escape(posterUrl) %> <% } %>" style="width: 100px;" />
           </div>
