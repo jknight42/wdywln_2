@@ -358,10 +358,7 @@ $(function() {
     autoFillMovieNames: function(e) {
       var self = this;
 
-
-      if(typeof newMovie !== "undefined") {
-        newMovie = null;
-      }
+      this.newMovie = new Movie();
 
       if($("#new-movie").val().length > 3) {
         $("#autocomplete-list").html('Searching ...');
