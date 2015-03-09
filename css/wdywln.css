@@ -20,12 +20,18 @@ ul {
     display: inline-block;
     margin: 0 5px;
     vertical-align: top;
+    width: 100px;
+    margin-bottom: 10px;
 }
 #your-movies-list .its-good {
     /*border: 1px solid rgb(179, 179, 236);*/
 }
 .poster-container {
     height: 150px;
+}
+.poster-container img {
+    width: 100px;
+    border: 1px solid #eee;
 }
 .title-content {
     font-size: 12px;
