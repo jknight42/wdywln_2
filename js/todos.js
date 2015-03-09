@@ -183,10 +183,8 @@ $(function() {
 
     },
     refreshMovies: function() {
-      // TODO:
-      // Seems like there should be a simpler way to refresh the movie list
-      // other than reinitializing the whole thing, but for now... 
-      this.initialize();
+      // Fetch all the movie items for this user
+      this.yourMovies.fetch();
     },
 
     // Logs out the user and shows the login view
