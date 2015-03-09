@@ -164,7 +164,6 @@ $(function() {
       // Fetch all the movie items for this user
       this.yourMovies.fetch();
 
-
       // Create a collection of our Friends' Movies
       this.yourFriendsMovies = new YourMovieList;
 
@@ -280,13 +279,11 @@ $(function() {
 
       console.log("Saving..."); // TODO: Replace with loading GIF or some such thing. 
       
-      var posterUrl = this.newMovie.get("posterUrl");
 
       var publicACL = new Parse.ACL();
       publicACL.setPublicReadAccess(true);
       this.newMovie.save({
         user: Parse.User.current(),
-        posterUrl: posterUrl,
         ACL:     publicACL,
         facebookID: Parse.User.current().escape("facebookID")
       }, {
