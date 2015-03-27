@@ -1,8 +1,7 @@
 * {
-    font-family: Arial, sans;
-}
-h1, h2, h3 {
-    font-weight: normal;
+    /*font-family: Arial, sans;*/
+    font-family: 'Nunito', sans-serif;
+    font-weight: 100;
 }
 html,body {
     margin: 0;
@@ -10,12 +9,21 @@ html,body {
     color: #333;
 }
 body {
-    padding: 20px 50px;
+    padding: 0;
 }
 ul { 
     margin: 0;
     padding: 0;
 }
+a {
+    text-decoration: none;
+    color: #FF6602;
+}
+
+#wdywln-app {
+    padding: 20px 50px;
+}
+
 #friends-movies-list li, #your-movies-list li {
     display: inline-block;
     margin: 0 5px;
@@ -23,15 +31,9 @@ ul {
     width: 100px;
     margin-bottom: 10px;
 }
-#your-movies-list .its-good {
-    /*border: 1px solid rgb(179, 179, 236);*/
-}
-#your-movies-list .its-not-good {
-    opacity: .1;
-}
-
 .poster-container {
     height: 150px;
+    overflow: hidden;
 }
 .poster-container img {
     width: 100px;
@@ -46,6 +48,67 @@ ul {
 
 }
 
-#user-info {
-    margin-top: 30px;
+.login-info { 
+    padding: 10px;
+    background: #eee;
+    border-radius: 0 0 5px 5px;
+    float: right;
+    font-size: 12px;
+    margin-right: 20px;
+}
+.modal.current {
+    top: 50px !important;
+    margin-top: 0 !important;
+}
+.modal h2 {
+    margin-top: 0;
+}
+
+input#new-movie {
+    width: 100%;
+    font-size: 21px;
+    padding: 5px 10px;
+    box-sizing: border-box;
+}
+#autocomplete-list {
+    list-style: none;
+    margin-top: 10px;
+}
+#autocomplete-list li {
+    border: 1px solid #eee;
+    margin-top: 2px;
+    padding: 5px 10px;
+}
+#autocomplete-list li:hover {
+    border-color: #FF6602;
+    cursor: pointer;
+}
+.metadata { 
+    font-size: 11px;
+}
+.metadata .year, .metadata .type  {
+    display: inline-block;
+    margin-right: 5px;
+} 
+.liked-by {
+    font-size: 9px;
+}
+.more-info {
+    display: none;
+    position: absolute;
+    right: -110px;
+    top: 50%;
+    width: 100px;
+    height: 100px;
+    border-radius: 5px;
+    border: 1px solid #eee;
+    background: #fff;
+    z-index: 2;
+    padding: 10px;
+}
+.movie-item {
+    position: relative;
+}
+.movie-item:hover .more-info {
+    display: block;
 }

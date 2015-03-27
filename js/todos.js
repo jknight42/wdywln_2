@@ -21,9 +21,11 @@ $(function() {
   var Movie = Parse.Object.extend("Movie", {
     defaults: {
       title: "empty..",
-      year: 0000,
+      date: "0000",
       type: "unknown",
       isGood: false,
+      likedBy: [],
+      notLikedBy: [],
       posterUrl: 'blank'
     },
 
@@ -97,13 +99,16 @@ $(function() {
 
     // The DOM events specific to an item.
     events: {
+      "click .poster-container": "showMovieInfo",
     },
 
     initialize: function() {
       _.bindAll(this, 'render',  'remove');
       this.model.bind('destroy', this.remove);
     },
-
+    showMovieInfo: function() {
+      console.log("showMovieInfo");
+    },
     render: function() {
       $(this.el).html(this.template(this.model.toJSON()));
       this.input = this.$('.edit');
@@ -155,27 +160,30 @@ $(function() {
 
       // Setup the query for the collection to look for Movies from the current user
       this.yourMovies.query = new Parse.Query(Movie);
-      this.yourMovies.query.equalTo("user", Parse.User.current());
+      // this.yourMovies.query.equalTo("user", Parse.User.current());
+      this.yourMovies.query.containedIn("likedBy", [Parse.User.current().escape("facebookID")]);
         
       this.yourMovies.bind('add',     this.addOne);
       this.yourMovies.bind('reset',   this.addAll);
       this.yourMovies.bind('all',     this.render);
 
       // Fetch all the movie items for this user
+      console.log("yourMovies fetch");
       this.yourMovies.fetch();
 
       // Create a collection of our Friends' Movies
       this.yourFriendsMovies = new YourMovieList;
 
-      // Setup the query for the collection to look for Movies from the current user
+      // Setup the query for the collection to look for Movies that the current user's friends liked
       this.yourFriendsMovies.query = new Parse.Query(Movie);
-      this.yourFriendsMovies.query.containedIn("facebookID", yourFriendsIds);
+      this.yourFriendsMovies.query.containedIn("likedBy", yourFriendsIds);
         
       this.yourFriendsMovies.bind('add',     this.friendsAddOne);
       this.yourFriendsMovies.bind('reset',   this.friendsAddAll);
       this.yourFriendsMovies.bind('all',     this.render);
 
       // Fetch all the movie items for this user
+      console.log("yourFriendsMovies fetch");
       this.yourFriendsMovies.fetch();
 
       state.on("change", this.filter, this);
@@ -250,6 +258,8 @@ $(function() {
     initialize: function() {
       var self = this;
       this.newMovie = new Movie();
+      this.movieToBeSaved = new Movie();
+      this.currMovieIsLiked = false;
       this.input = this.$("#new-movie");
       this.allCheckbox = this.$("#toggle-all")[0];
 
@@ -259,33 +269,72 @@ $(function() {
       this.yourMovies = new YourMovieList;
 
       // Setup the query for the collection to look for Movies from the current user
+      console.log("Add Movie View: yourMovies query");
       this.yourMovies.query = new Parse.Query(Movie);
       this.yourMovies.query.equalTo("user", Parse.User.current());
         
       this.yourMovies.bind('add',     this.addOne);
       
       this.$el.html(_.template($("#add-movie-template").html()));
+      $('.add-movie-container').modal();
     },
     addOne: function(movie) {
       var view = new MovieView({model: movie});
       this.$("#your-movies-list").append(view.render().el);
     },
     addMovieToList: function() {
+      var self = this;
+      var movieToBeSaved = new Movie();
+      console.log("addMovieToList");
       this.yourMovies = new YourMovieList;
 
       // Setup the query for the collection to look for Movies from the current user
+      console.log("Add Movie View: yourMovies query");
       this.yourMovies.query = new Parse.Query(Movie);
       this.yourMovies.query.equalTo("user", Parse.User.current());
 
       console.log("Saving..."); // TODO: Replace with loading GIF or some such thing. 
-      
 
+      // First check to see if movie already exists in DB: 
+      var query = new Parse.Query(Movie);
+
+      query.equalTo("imdbId", this.newMovie.get("imdbId"));
+      query.find({
+        success: function(results) {
+          console.log(results);
+          if(results.length == 0) {
+            console.log("Movie does not exist: "+self.newMovie.get("imdbId"));
+            // TODO: Move existing code to create new movie here and add current user's facebook Id to the like or not like column. 
+            self.movieToBeSaved = self.newMovie;
+            self.saveMovie();
+          } else {
+            console.log("MOVIE EXISTS!"+self.newMovie.get("imdbId"));
+            console.log(results)
+            self.movieToBeSaved = results[0];
+            
+            self.saveMovie();
+          }
+        },
+        error: function(error) {
+          console.log("Error checking for movie in table:");
+          console.log(error);
+        }
+      });
+    },
+    saveMovie: function() {
       var publicACL = new Parse.ACL();
       publicACL.setPublicReadAccess(true);
-      this.newMovie.save({
+      publicACL.setPublicWriteAccess(true);
+
+      if(this.currMovieIsLiked) {
+        this.movieToBeSaved.addUnique("likedBy",Parse.User.current().escape("facebookID"));
+      } else {
+        this.movieToBeSaved.addUnique("notLikedBy",Parse.User.current().escape("facebookID"));
+      }
+
+      this.movieToBeSaved.save({
         user: Parse.User.current(),
         ACL:     publicACL,
-        facebookID: Parse.User.current().escape("facebookID")
       }, {
         success: function(newMovie) {
           // The object was saved successfully.
@@ -301,6 +350,7 @@ $(function() {
       });
     },
     getPoster: function() {
+      console.log("getPoster");
       // GET MOVIE POSTER: 
       // http://img.omdbapi.com/?i=tt2294629&apikey=24d1a7e9 
       // http://www.omdbapi.com/?i=tt1127180&plot=short&r=json
@@ -317,6 +367,7 @@ $(function() {
         url: 'http://www.omdbapi.com/',
         dataType: 'jsonp',
         success: function(jsonData) {
+          console.log("--poster success: "+jsonData.Poster);
           self.newMovie.set("posterUrl", jsonData.Poster);
           self.addMovieToList();
         },
@@ -334,16 +385,17 @@ $(function() {
 
       this.newMovie.set("title", $(e.currentTarget).attr("title") );
       this.newMovie.set("type", $(e.currentTarget).attr("type"));
-      this.newMovie.set("year", +$(e.currentTarget).attr("year"));
+      this.newMovie.set("date", $(e.currentTarget).attr("date"));
       this.newMovie.set("imdbId", $(e.currentTarget).attr("imdbId"));
       this.showQuestionPart2();
     },
     likeAnswerClicked: function(e) {
+      $.modal.close();
       var answerId = e.currentTarget.id;
       if(answerId == 'liked-it') {
-        this.newMovie.set("isGood",true);
+        this.currMovieIsLiked = true;
       } else if(answerId == 'did-not-like-it') {
-        this.newMovie.set("isGood",false);
+        this.currMovieIsLiked = false;
       }
       
       $("#question-part-2").hide();
@@ -379,7 +431,7 @@ $(function() {
             var tvAndMovieList = jsonData.Search;
             if(tvAndMovieList) {
 
-              for (var i = 0; i < tvAndMovieList.length; i++) {
+              for (var i = 0; i < 5; i++) {
 
                 var currLi = $("<li/>");
                 // $("#autocomplete-list").append("<img src='"+tvAndMovieList.movies[i].posters.profile+"' />");
@@ -390,7 +442,7 @@ $(function() {
                 metadata.append("<div class='type'>"+tvAndMovieList[i].Type+"</div>");
 
                 currLi.attr("title",tvAndMovieList[i].Title);
-                currLi.attr("year",tvAndMovieList[i].Year);
+                currLi.attr("date",tvAndMovieList[i].Year);
                 currLi.attr("type",tvAndMovieList[i].Type);
                 currLi.attr("imdbId",tvAndMovieList[i].imdbID);
                                 
@@ -510,11 +562,11 @@ $(function() {
       "click .log-out": "logOut"
     },
 
-    el: ".content",
+    el: ".login-info",
 
     initialize: function() {
       var self = this;
-
+      console.log(this.$el);
       this.$el.html(_.template($("#signed-in-template").html()));
 
     },
@@ -552,6 +604,7 @@ $(function() {
       if (Parse.User.current()) {
         new AddMovieView();
         theMainView = new MainView();
+        new SignedInView();
       } else {
         new LogInView();
       }

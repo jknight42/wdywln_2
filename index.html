@@ -4,12 +4,16 @@
     <meta charset="utf-8">
     <title>WDYWLN App</title>
     <link href="css/wdywln.css" media="all" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" href="css/jquery.modal.css" type="text/css" media="screen" />
+    <link href='http://fonts.googleapis.com/css?family=Nunito:400,300' rel='stylesheet' type='text/css'>
+    
     <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+    <script src="js/jquery.modal.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/underscore.js"></script>
     <script src="http://www.parsecdn.com/js/parse-1.2.13.min.js"></script>
     <script src="js/todos.js"></script>
+    
   </head>
-
   <body>
     <div id="fb-root"></div>
     <script>
@@ -34,13 +38,14 @@
     </script>
 
     <!-- WDYWLN App Interface -->
-
+    <div class="login-info"></div>
     <div id="wdywln-app">
-      <div class="title">
+
+      <div class="title" id="title">
         <h1>Whatchu Whatchu</h1>
       </div>
 
-      <div class="add-movie-container">
+      <div class="add-movie-container modal">
          
       </div>
 
@@ -69,6 +74,7 @@
           
         </header>
         <div id="friends-movies-list-container">
+
           <h2>Your Friends Movies</h2>
           <ul id="friends-movies-list">
               
@@ -81,14 +87,12 @@
           </ul>
         </div> 
       </div>
-      <div id="user-info">
-        Howdy <%= Parse.User.current().escape("firstName") %> (<a href="#" class="log-out">Log out</a>)
-      </div>
+      
     </script>
 
     <script type="text/template" id="add-movie-template">
       <h2>What did you watch last night?</h2>
-      <div class="question-part-1">
+      <div class="question-part-1 " >
         <input id="new-movie" placeholder="movie, tv show, etc. " type="text" />
         <ul id="autocomplete-list">
 
@@ -111,11 +115,20 @@
 
     
     <script type="text/template" id="item-template">
-      	<div class="view <% if(isGood) { %> its-good <% } else { %> its-not-good <% } %>" >
+      	<div class="view movie-item" >
           <div class="poster-container">
-            <img src="<% if(posterUrl) { %> <%= _.escape(posterUrl) %> <% } %>" style="width: 100px;" />
+            <img src="<% if(posterUrl) { %> <%= _.escape(posterUrl) %> <% } %>" />
           </div>
-      	  <div class="title-content"><%= _.escape(title) %></div>
+          <div class="title-content"><%= _.escape(title) %></div>
+      	  <div class="liked-by" style="display:none;"><%= _.escape(likedBy) %></div>
+          <div class="more-info">
+            Liked by.
+
+
+            <% _.each(likedBy, function(someThing) { %>
+              <%= _.escape(someThing) %>
+            <% }) %>
+          </div>
       	</div>
     </script>
 
