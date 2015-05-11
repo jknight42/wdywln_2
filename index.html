@@ -42,7 +42,7 @@
     <div id="wdywln-app">
 
       <div class="title" id="title">
-        <h1>Whatchu Whatchu</h1>
+        <h1>Watchu Watchu</h1>
       </div>
 
       <div class="add-movie-container modal">
@@ -115,21 +115,18 @@
 
     
     <script type="text/template" id="item-template">
-      	<div class="view movie-item" >
+      	<a class="view movie-item" href="#">
           <div class="poster-container">
             <img src="<% if(posterUrl) { %> <%= _.escape(posterUrl) %> <% } %>" />
           </div>
-          <div class="title-content"><%= _.escape(title) %></div>
-      	  <div class="liked-by" style="display:none;"><%= _.escape(likedBy) %></div>
+         
           <div class="more-info">
-            Liked by.
-
-
-            <% _.each(likedBy, function(someThing) { %>
-              <%= _.escape(someThing) %>
-            <% }) %>
+            <div class="movie-title"><%= _.escape(title) %></div>
+            Liked by:
+            <ul>
+            </ul>
           </div>
-      	</div>
+      	</a>
     </script>
 
    

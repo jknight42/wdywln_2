@@ -6,11 +6,16 @@
 html,body {
     margin: 0;
     padding: 0;
-    color: #333;
+    color: #E7E7E7;
+}
+.metadata, .more-info, .modal, .login-info {
+    color: #666;
 }
 body {
     padding: 0;
+    background: rgb(76, 76, 76);
 }
+
 ul { 
     margin: 0;
     padding: 0;
@@ -24,28 +29,30 @@ a {
     padding: 20px 50px;
 }
 
-#friends-movies-list li, #your-movies-list li {
+.movie-item {
     display: inline-block;
-    margin: 0 5px;
+    margin: 0 10px 0 0;
     vertical-align: top;
-    width: 100px;
     margin-bottom: 10px;
+    position: relative;
 }
 .poster-container {
-    height: 150px;
+    height: 240px;
     overflow: hidden;
+    box-shadow: 1px 1px 2px 1px rgba(0, 0, 0, 0.4);
 }
 .poster-container img {
-    width: 100px;
     border: 1px solid #eee;
+    width: 160px;
+    height: 240px;
+    box-sizing: border-box;
 }
-.title-content {
-    font-size: 12px;
-    color: #666;
-    border-top: 1px dotted #999;
-    padding-top: 5px;
-    margin-top: 10px;
 
+.movie-title {
+    font-size: 12px;
+    border-bottom: 1px dotted #999;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
 }
 
 .login-info { 
@@ -96,18 +103,23 @@ input#new-movie {
 .more-info {
     display: none;
     position: absolute;
-    right: -110px;
-    top: 50%;
-    width: 100px;
-    height: 100px;
+    left: 170px;
+    top: 0;
+    width: 160px;
+    min-height: 100px;
     border-radius: 5px;
     border: 1px solid #eee;
     background: #fff;
     z-index: 2;
     padding: 10px;
+    box-shadow: 0 0 2px rgba(0,0,0,.5);
+    font-size: 11px;
 }
-.movie-item {
-    position: relative;
+.more-info ul {
+    list-style: none;
+}   
+.more-info li.liked-by-name {
+    margin: 2px 0 0 0;
 }
 .movie-item:hover .more-info {
     display: block;

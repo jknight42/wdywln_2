@@ -25,17 +25,20 @@ $(function() {
       type: "unknown",
       isGood: false,
       likedBy: [],
+      likedByNames: "Steve",
       notLikedBy: [],
       posterUrl: 'blank'
     },
 
     initialize: function() {
       
+
     },
 
     toggle: function() {
       this.save({done: !this.get("done")});
-    }
+    },
+    
   });
 
 
@@ -45,6 +48,16 @@ $(function() {
       filter: "all"
     }
   });
+
+  // User model.
+  var User = Parse.Object.extend("User", {
+    defaults: {
+
+    },
+    initialize: function() {
+
+    },
+  })
 
 /***
  *    ##     ##  #######  ##     ## #### ########    ##       ####  ######  ######## 
@@ -78,6 +91,7 @@ $(function() {
   });
 
 
+
 /***
  *    ##     ##  #######  ##     ## #### ########    ##     ## #### ######## ##      ## 
  *    ###   ### ##     ## ##     ##  ##  ##          ##     ##  ##  ##       ##  ##  ## 
@@ -99,19 +113,50 @@ $(function() {
 
     // The DOM events specific to an item.
     events: {
-      "click .poster-container": "showMovieInfo",
+      "mouseover .poster-container": "showMovieInfo",
     },
 
     initialize: function() {
+      var self = this;
       _.bindAll(this, 'render',  'remove');
       this.model.bind('destroy', this.remove);
+
+      this.likedByFriends = [];
+      this.isMovieInfoPopulated = false;
+
+
+      var query = new Parse.Query(User);
+      query.containedIn("facebookID", this.model.attributes.likedBy);
+      query.find({
+        success: function(results) {
+          for (var i = 0; i < results.length; i++) {
+            self.likedByFriends[i] = {};
+            self.likedByFriends[i].firstName = results[i].attributes.firstName;
+            self.likedByFriends[i].lastName = results[i].attributes.lastName;
+          };
+        },
+        error: function(error) {
+          console.log("Error checking for movie in table:");
+          console.log(error);
+        }
+      });
+
+
     },
     showMovieInfo: function() {
-      console.log("showMovieInfo");
+      if(this.isMovieInfoPopulated == false) {
+        var moreInfoUl = $(this.el).find(".more-info ul");
+        for(i=0 ; i < this.likedByFriends.length ; i++ ) {
+          moreInfoUl.append("<li class='liked-by-name'>"+this.likedByFriends[i].firstName+" "+this.likedByFriends[i].lastName+"</li>")
+        }
+        this.isMovieInfoPopulated = true;
+      } 
     },
     render: function() {
       $(this.el).html(this.template(this.model.toJSON()));
+      $(this.el).addClass("movie-item");
       this.input = this.$('.edit');
+      
       return this;
     },
 
@@ -168,7 +213,6 @@ $(function() {
       this.yourMovies.bind('all',     this.render);
 
       // Fetch all the movie items for this user
-      console.log("yourMovies fetch");
       this.yourMovies.fetch();
 
       // Create a collection of our Friends' Movies
@@ -183,7 +227,6 @@ $(function() {
       this.yourFriendsMovies.bind('all',     this.render);
 
       // Fetch all the movie items for this user
-      console.log("yourFriendsMovies fetch");
       this.yourFriendsMovies.fetch();
 
       state.on("change", this.filter, this);
@@ -269,7 +312,6 @@ $(function() {
       this.yourMovies = new YourMovieList;
 
       // Setup the query for the collection to look for Movies from the current user
-      console.log("Add Movie View: yourMovies query");
       this.yourMovies.query = new Parse.Query(Movie);
       this.yourMovies.query.equalTo("user", Parse.User.current());
         
@@ -285,11 +327,9 @@ $(function() {
     addMovieToList: function() {
       var self = this;
       var movieToBeSaved = new Movie();
-      console.log("addMovieToList");
       this.yourMovies = new YourMovieList;
 
       // Setup the query for the collection to look for Movies from the current user
-      console.log("Add Movie View: yourMovies query");
       this.yourMovies.query = new Parse.Query(Movie);
       this.yourMovies.query.equalTo("user", Parse.User.current());
 
@@ -301,7 +341,6 @@ $(function() {
       query.equalTo("imdbId", this.newMovie.get("imdbId"));
       query.find({
         success: function(results) {
-          console.log(results);
           if(results.length == 0) {
             console.log("Movie does not exist: "+self.newMovie.get("imdbId"));
             // TODO: Move existing code to create new movie here and add current user's facebook Id to the like or not like column. 
@@ -350,7 +389,6 @@ $(function() {
       });
     },
     getPoster: function() {
-      console.log("getPoster");
       // GET MOVIE POSTER: 
       // http://img.omdbapi.com/?i=tt2294629&apikey=24d1a7e9 
       // http://www.omdbapi.com/?i=tt1127180&plot=short&r=json
@@ -367,7 +405,6 @@ $(function() {
         url: 'http://www.omdbapi.com/',
         dataType: 'jsonp',
         success: function(jsonData) {
-          console.log("--poster success: "+jsonData.Poster);
           self.newMovie.set("posterUrl", jsonData.Poster);
           self.addMovieToList();
         },
@@ -487,6 +524,7 @@ $(function() {
               function (response) {
                 if (response && !response.error) {
                   Parse.User.current().save("firstName",response.first_name);
+                  Parse.User.current().save("lastName",response.last_name);
                   Parse.User.current().save("facebookID",response.id);
                   
                   new AddMovieView();
