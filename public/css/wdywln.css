@@ -24,7 +24,11 @@ a {
     text-decoration: none;
     color: #FF6602;
 }
-
+.btn {
+    padding: 5px 10px;
+    background: #ff6602;
+    color: #fff;
+}
 #wdywln-app {
     padding: 20px 50px;
 }
@@ -70,6 +74,11 @@ a {
 .modal h2 {
     margin-top: 0;
 }
+.subtext {
+    font-size: 11px;
+    margin-top: 5px;
+}
+
 
 input#new-movie {
     width: 100%;
@@ -124,3 +133,16 @@ input#new-movie {
 .movie-item:hover .more-info {
     display: block;
 }
+.movie-item:hover .watch {
+    display: block;
+}
+.watch {
+    display: none;
+    bottom: 0px;
+    position: absolute;
+    border: 1px solid #FFf;
+    width: 160px;
+    text-align: center;
+    box-sizing: border-box;
+}
+

@@ -288,6 +288,7 @@ $(function() {
  *    ##     ## ##     ## ##     ##    ##     ## ##     ##   ## ##    ##  ##            ## ##    ##  ##       ##  ##  ## 
  *    ##     ## ########  ########     ##     ##  #######     ###    #### ########       ###    #### ########  ###  ###  
  */
+  var theAddMovieView;
   var AddMovieView = Parse.View.extend({
 
     events: {
@@ -318,7 +319,10 @@ $(function() {
       this.yourMovies.bind('add',     this.addOne);
       
       this.$el.html(_.template($("#add-movie-template").html()));
-      $('.add-movie-container').modal();
+      this.showAddMovie();
+    },
+    showAddMovie: function() {
+       $('.add-movie-container').modal();
     },
     addOne: function(movie) {
       var view = new MovieView({model: movie});
@@ -405,7 +409,7 @@ $(function() {
         url: 'http://www.omdbapi.com/',
         dataType: 'jsonp',
         success: function(jsonData) {
-          self.newMovie.set("posterUrl", jsonData.Poster);
+          self.newMovie.set("posterUrl", "http://img.omdbapi.com/?i="+dataObj.i+"&apikey=24d1a7e9");
           self.addMovieToList();
         },
         error: function(error) {
@@ -527,7 +531,7 @@ $(function() {
                   Parse.User.current().save("lastName",response.last_name);
                   Parse.User.current().save("facebookID",response.id);
                   
-                  new AddMovieView();
+                  theAddMovieView = new AddMovieView();
                   theMainView = new MainView();
                   
                 } else {
@@ -597,7 +601,8 @@ $(function() {
   var SignedInView = Parse.View.extend({
 
     events: {
-      "click .log-out": "logOut"
+      "click .log-out": "logOut",
+      "click .js-trigger-add-movie": "showAddMovie"
     },
 
     el: ".login-info",
@@ -614,6 +619,10 @@ $(function() {
       new LogInView();
       this.undelegateEvents();
       delete this;
+    },
+    showAddMovie:function() {
+      console.log(this);
+      theAddMovieView.showAddMovie();
     }
 
   });
@@ -640,7 +649,7 @@ $(function() {
 
     render: function() {
       if (Parse.User.current()) {
-        new AddMovieView();
+        theAddMovieView = new AddMovieView();
         theMainView = new MainView();
         new SignedInView();
       } else {

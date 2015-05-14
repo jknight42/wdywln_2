@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>WDYWLN App</title>
+    <title>FittyO - Share what you are watching</title>
     <link href="css/wdywln.css" media="all" rel="stylesheet" type="text/css"/>
     <link rel="stylesheet" href="css/jquery.modal.css" type="text/css" media="screen" />
     <link href='http://fonts.googleapis.com/css?family=Nunito:400,300' rel='stylesheet' type='text/css'>
@@ -42,7 +42,10 @@
     <div id="wdywln-app">
 
       <div class="title" id="title">
-        <h1>Watchu Watchu</h1>
+        <h1>FittyO</h1>
+        <p>
+          Need something to watch? Use FittyO to see what you friends are watching (and liking!)
+        </p>
       </div>
 
       <div class="add-movie-container modal">
@@ -91,7 +94,11 @@
     </script>
 
     <script type="text/template" id="add-movie-template">
-      <h2>What did you watch last night?</h2>
+      <h2>
+        What did you watch last night?
+        <div class="subtext">... or the night before last? Or what is your favorite movie or tv show of all time?</div>
+      </h2>
+
       <div class="question-part-1 " >
         <input id="new-movie" placeholder="movie, tv show, etc. " type="text" />
         <ul id="autocomplete-list">
@@ -108,18 +115,22 @@
 
      <script type="text/template" id="signed-in-template">
       <div id="user-info">
-        Howdy <%= Parse.User.current().escape("firstName") %> (<a href="#" class="log-out">Log out</a>)
+        Howdy <%= Parse.User.current().escape("firstName") %> (<a href="#" class="log-out">Log out</a>) &nbsp;|&nbsp; <a href="javascript:void(0);" class="js-trigger-add-movie">Add movie</a>
       </div>
 
     </script>    
 
     
     <script type="text/template" id="item-template">
-      	<a class="view movie-item" href="#">
+      	<a class="view movie-item" href="http://www.amazon.com/s/?url=search-alias%3Daps&tag=fittyo-20&field-keywords=<%= _.escape(title) %>" target="_blank">
           <div class="poster-container">
-            <img src="<% if(posterUrl) { %> <%= _.escape(posterUrl) %> <% } %>" />
+            <img src="<%= _.escape('http://img.omdbapi.com/?i='+imdbId+'&apikey=24d1a7e9') %>" />
+            <div class="btn watch">Watch now</div>
           </div>
+
          
+
+
           <div class="more-info">
             <div class="movie-title"><%= _.escape(title) %></div>
             Liked by:
