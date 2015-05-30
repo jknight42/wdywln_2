@@ -2,16 +2,26 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>FittyO - Share what you are watching</title>
+    <title>The Watch List - Share what you are watching</title>
     <link href="css/wdywln.css" media="all" rel="stylesheet" type="text/css"/>
     <link rel="stylesheet" href="css/jquery.modal.css" type="text/css" media="screen" />
     <link href='http://fonts.googleapis.com/css?family=Nunito:400,300' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300,600,400' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Josefin Slab:400,300' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Vollkorn:400,300' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Arvo' rel='stylesheet' type='text/css'>
+    <link href="https://fontastic.s3.amazonaws.com/EP6h52uf4NDcRQUwSjTFJ3/icons.css" rel="stylesheet">
     
+    <script>
+      window.bigOlScope = "";
+    </script>
+
     <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
     <script src="js/jquery.modal.min.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/underscore.js"></script>
     <script src="http://www.parsecdn.com/js/parse-1.2.13.min.js"></script>
     <script src="js/todos.js"></script>
+
     
   </head>
   <body>
@@ -24,9 +34,66 @@
             cookie     : true, // enable cookies to allow Parse to access the session
             xfbml      : true  // parse XFBML
         });
+
+        console.log("THIS",this)
+        console.log("THIS",$("div.content"))
+
+        console.log("GETTING BIG OL");
+        window.bigOlScope.theMainView.getAllMovies();
+
+        Parse.FacebookUtils.logIn("email,user_friends,read_friendlists", {
+        success: function(user) {
+          // Handle successful login
+          FB.api(
+            "/v1.0/me/friends",
+            function (response) {
+              console.log("html response",response)
+              if (response && !response.error) {
+                var currUserFriendsIds = [];
+                for (var i = response.data.length - 1; i >= 0; i--) {
+                  currUserFriendsIds.push(response.data[i].id);
+                };
+
+                var currUser = Parse.User.current();
+
+                currUser.set("friendIDs",currUserFriendsIds)
+
+                currUser.save(null, {
+                  success: function(response) {
+                    // Execute any logic that should take place after the object is saved.
+                    console.log('User data saved: ' + response);
+                    
+                  },
+                  error: function(response, error) {
+                    // Execute any logic that should take place if the save fails.
+                    // error is a Parse.Error with an error code and message.
+                    console.log('Failed to create save user data, with error code: ' + error.message);
+                  }
+                });
+
+
+              } else {
+                console.log("Friends Error:")
+                console.log(response.error)
+              }
+            }
+          );
+          new SignedInView();
+        },
+        error: function(user, error) {
+          // Handle errors and cancellation
+          console.log("\nError:");
+          console.log(user);
+          console.log(error);
+        }
+      });
+
          
           // Additional initialization code here
       };
+
+
+
 
       (function(d, s, id){
        var js, fjs = d.getElementsByTagName(s)[0];
@@ -41,10 +108,15 @@
     <div class="login-info"></div>
     <div id="wdywln-app">
 
-      <div class="title" id="title">
-        <h1>FittyO</h1>
+      <div id="intro">
+        <h1>
+          The Watch List
+          <div class="subhead">The dead simple way to share what you watch.</div>
+        </h1>
+
         <p>
-          Need something to watch? Use FittyO to see what you friends are watching (and liking!)
+          Need something to watch? Use The Watch List to see what you friends are watching.<br>
+          Sharing is super easy, just add a movie or show and say if you liked it. No reviews, star ratings, scores or anything.
         </p>
       </div>
 
@@ -64,7 +136,7 @@
     <script type="text/template" id="login-template">
       <header id="header"></header>
        <div class="facebook-login">
-          <a href="#" class="facebook-login-button">Login with Facebook</a>
+          <a href="#" class="facebook-login-button btn2">Login with Facebook</a>
         </div>
     </script>
 
@@ -78,13 +150,13 @@
         </header>
         <div id="friends-movies-list-container">
 
-          <h2>Your Friends Movies</h2>
+          <h2>Your Friends Like</h2>
           <ul id="friends-movies-list">
               
           </ul>
         </div> 
         <div id="your-movies-list-container">
-          <h2>Your Movies</h2>
+          <h2>You Like</h2>
           <ul id="your-movies-list">
             . . . 
           </ul>
@@ -107,8 +179,10 @@
       </div>
       <div id="question-part-2" style="display: none;">
         <div>Did you like it?</div>
-        <a href="javascript:void(0)" id="liked-it" class="like-answer">Yes</a>
-        <a href="javascript:void(0)" id="did-not-like-it" class="like-answer">No</a>
+        <div class="like-or-not-like">
+          <a href="javascript:void(0)" id="liked-it" class="like-answer btn">Yes</a>
+          <a href="javascript:void(0)" id="did-not-like-it" class="like-answer btn">No</a>
+        </div>
       </div>
       
     </script>
@@ -122,22 +196,28 @@
 
     
     <script type="text/template" id="item-template">
-      	<a class="view movie-item" href="http://www.amazon.com/s/?url=search-alias%3Daps&tag=fittyo-20&field-keywords=<%= _.escape(title) %>" target="_blank">
+      	<a class="view" href="http://www.amazon.com/s/?url=search-alias%3Daps&tag=fittyo-20&field-keywords=<%= _.escape(title) %>" target="_blank">
           <div class="poster-container">
             <img src="<%= _.escape('http://img.omdbapi.com/?i='+imdbId+'&apikey=24d1a7e9') %>" />
             <div class="btn watch">Watch now</div>
           </div>
 
-         
-
-
           <div class="more-info">
-            <div class="movie-title"><%= _.escape(title) %></div>
-            Liked by:
-            <ul>
-            </ul>
+            <div class="movie-title"><%= _.escape(title) %><div class='year'><%= _.escape(date) %></div></div>
+            <div class="actors">
+               <% if(typeof actors !== 'undefined') { %><%= _.escape(actors) %><% } %>
+            </div>
+            <div class="plot">
+              <% if(typeof plot !== 'undefined') { %><%= _.escape(plot) %><% } %>
+            </div>
+            <div class="liked-by">
+              Liked by:
+              <ul>
+              </ul>
+            </div>
           </div>
       	</a>
+        <a href="javascript:void(0);" class="like-btn-inline"><span class="icon-like-filled"></span><span class="num-of-likes"><%= _.escape(likedBy.length) %></span></a>
     </script>
 
    

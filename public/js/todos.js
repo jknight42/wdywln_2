@@ -1,6 +1,6 @@
 
 $(function() {
-
+  console.log("todos.js this",this)
   Parse.$ = jQuery;
 
   // Initialize Parse with your Parse application javascript keys
@@ -25,7 +25,6 @@ $(function() {
       type: "unknown",
       isGood: false,
       likedBy: [],
-      likedByNames: "Steve",
       notLikedBy: [],
       posterUrl: 'blank'
     },
@@ -114,6 +113,7 @@ $(function() {
     // The DOM events specific to an item.
     events: {
       "mouseover .poster-container": "showMovieInfo",
+      "click .like-btn-inline": "likeMovie"
     },
 
     initialize: function() {
@@ -124,16 +124,31 @@ $(function() {
       this.likedByFriends = [];
       this.isMovieInfoPopulated = false;
 
+      this.getLikedByFriends();
 
+    },
+    getLikedByFriends: function() {
+      var self = this;
       var query = new Parse.Query(User);
       query.containedIn("facebookID", this.model.attributes.likedBy);
       query.find({
         success: function(results) {
+          console.log("results",results);
+          self.likedByFriends = []
           for (var i = 0; i < results.length; i++) {
             self.likedByFriends[i] = {};
             self.likedByFriends[i].firstName = results[i].attributes.firstName;
             self.likedByFriends[i].lastName = results[i].attributes.lastName;
           };
+          if($.inArray(Parse.User.current().escape("facebookID"), self.model.attributes.likedBy) > -1) {
+            $(self.el).find(".like-btn-inline").addClass("you-like-it");
+          }
+          $(self.el).find(".more-info ul li").remove();
+          var moreInfoUl = $(self.el).find(".more-info ul");
+          console.log("self.likedByFriends",self.likedByFriends)
+          for(i=0 ; i < self.likedByFriends.length ; i++ ) {
+            moreInfoUl.append("<li class='liked-by-name'>"+self.likedByFriends[i].firstName+" "+self.likedByFriends[i].lastName+"</li>")
+          }
         },
         error: function(error) {
           console.log("Error checking for movie in table:");
@@ -141,16 +156,49 @@ $(function() {
         }
       });
 
-
     },
     showMovieInfo: function() {
-      if(this.isMovieInfoPopulated == false) {
-        var moreInfoUl = $(this.el).find(".more-info ul");
-        for(i=0 ; i < this.likedByFriends.length ; i++ ) {
-          moreInfoUl.append("<li class='liked-by-name'>"+this.likedByFriends[i].firstName+" "+this.likedByFriends[i].lastName+"</li>")
+
+    },
+    likeMovie: function() {
+      var self = this;
+      
+      // Fade out like button as a loading indicator: 
+      $(self.el).find(".like-btn-inline").animate({"opacity":.25},500);
+
+      if( $.inArray(Parse.User.current().escape("facebookID"), this.model.attributes.likedBy) > -1 ) {
+        // user already likes this movie, change to unlike. 
+        this.model.remove("likedBy", Parse.User.current().escape("facebookID"));
+      } else {
+        this.model.addUnique("likedBy",Parse.User.current().escape("facebookID"));
+      }
+      
+      this.model.save({
+        user: Parse.User.current()
+      }, {
+        success: function(result) {
+          // The object was saved successfully.
+          self.model.fetch({
+            success: function(result) {
+              // The object was refreshed successfully.
+              self.getLikedByFriends();
+              self.render();
+              $(self.el).find(".like-btn-inline").animate({"opacity":1},1000);
+            },
+            error: function(myObject, error) {
+              // The object was not refreshed successfully.
+              // error is a Parse.Error with an error code and message.
+            }
+          });
+
+        },
+        error: function(newMovie, error) {
+          // The save failed.
+          // error is a Parse.Error with an error code and message.
+          console.log("Error liking movie");
         }
-        this.isMovieInfoPopulated = true;
-      } 
+      });
+      
     },
     render: function() {
       $(this.el).html(this.template(this.model.toJSON()));
@@ -178,7 +226,6 @@ $(function() {
  *    ##     ## ##     ## #### ##    ##       ###    #### ########  ###  ###  
  */
 
-  var theMainView;
   var MainView = Parse.View.extend({
 
     // Delegated events for creating new items, and clearing completed ones.
@@ -189,15 +236,26 @@ $(function() {
     el: ".content",
 
     initialize: function() {
-      console.log("MainView init");
+      console.log("MainView init",this);
       var self = this;
 
-      _.bindAll(this, 'addOne', 'addAll', 'friendsAddOne', 'friendsAddAll', 'render','logOut');
+      _.bindAll(this, 'addOne', 'addAll', 'friendsAddOne', 'friendsAddAll', 'render','logOut',"getAllMovies");
+
+      // Hide intro text once they are logged in
+      $("#intro").hide();
 
       // Main movies management template
       
       this.$el.html(_.template($("#main-movies-template").html()));
+      
+      console.log("Parse.User",Parse.User.current());
+      this.getAllMovies();
 
+      
+
+    },
+    getAllMovies: function() {
+      console.log("getAllMovies");
       var yourFriendsIds = Parse.User.current().get("friendIDs");
 
       // Create our collection of Movies
@@ -220,6 +278,7 @@ $(function() {
 
       // Setup the query for the collection to look for Movies that the current user's friends liked
       this.yourFriendsMovies.query = new Parse.Query(Movie);
+      console.log("yourFriendsIds",yourFriendsIds)
       this.yourFriendsMovies.query.containedIn("likedBy", yourFriendsIds);
         
       this.yourFriendsMovies.bind('add',     this.friendsAddOne);
@@ -230,9 +289,9 @@ $(function() {
       this.yourFriendsMovies.fetch();
 
       state.on("change", this.filter, this);
-
     },
     refreshMovies: function() {
+      console.log("refreshMovies");
       // Fetch all the movie items for this user
       this.yourMovies.fetch();
     },
@@ -273,6 +332,7 @@ $(function() {
 
     // Add all items in the collection at once.
     friendsAddAll: function(collection, filter) {
+      console.log("friendsAddAll");
       this.$("#friends-movies-list").html("");
       this.yourFriendsMovies.each(this.friendsAddOne);
     },
@@ -409,7 +469,10 @@ $(function() {
         url: 'http://www.omdbapi.com/',
         dataType: 'jsonp',
         success: function(jsonData) {
+          console.log("getposter",jsonData)
           self.newMovie.set("posterUrl", "http://img.omdbapi.com/?i="+dataObj.i+"&apikey=24d1a7e9");
+          self.newMovie.set("plot", jsonData.Plot);
+          self.newMovie.set("actors", jsonData.Actors);
           self.addMovieToList();
         },
         error: function(error) {
@@ -428,6 +491,7 @@ $(function() {
       this.newMovie.set("type", $(e.currentTarget).attr("type"));
       this.newMovie.set("date", $(e.currentTarget).attr("date"));
       this.newMovie.set("imdbId", $(e.currentTarget).attr("imdbId"));
+
       this.showQuestionPart2();
     },
     likeAnswerClicked: function(e) {
@@ -470,6 +534,7 @@ $(function() {
           {
             $("#autocomplete-list").html('');
             var tvAndMovieList = jsonData.Search;
+            console.log(tvAndMovieList);
             if(tvAndMovieList) {
 
               for (var i = 0; i < 5; i++) {
@@ -490,6 +555,10 @@ $(function() {
                 $("#autocomplete-list").append(currLi);
               };
             }
+          },
+          error: function(e) {
+            alert("Autocomplete has shit the bed. This error has been logged.");
+            Parse.Analytics.track('error', { area: "autocomplete", searchString: dataObj.s, user: Parse.User.current().get("firstName")+Parse.User.current().get("lastName") });
           }
         });
       }
@@ -507,6 +576,7 @@ $(function() {
  *    ##       ##     ## ##    ##   ##  ##   ###      ## ##    ##  ##       ##  ##  ## 
  *    ########  #######   ######   #### ##    ##       ###    #### ########  ###  ###  
  */
+ var theLoginView
  var LogInView = Parse.View.extend({
     events: {
       "click .facebook-login-button": "facebookLogIn",
@@ -533,7 +603,7 @@ $(function() {
                   
                   theAddMovieView = new AddMovieView();
                   theMainView = new MainView();
-                  
+                  console.log("SETTING THE MAIN VIEW");
                 } else {
                   console.log("Error:")
                   console.log(response.error)
@@ -541,36 +611,37 @@ $(function() {
               }
           );
           FB.api(
-              "/v1.0/me/friends",
-              function (response) {
-                if (response && !response.error) {
-                  var currUserFriendsIds = [];
-                  for (var i = response.data.length - 1; i >= 0; i--) {
-                    currUserFriendsIds.push(response.data[i].id);
-                  };
+            "/v1.0/me/friends",
+            function (response) {
+              console.log("response",response)
+              if (response && !response.error) {
+                var currUserFriendsIds = [];
+                for (var i = response.data.length - 1; i >= 0; i--) {
+                  currUserFriendsIds.push(response.data[i].id);
+                };
 
-                  var currUser = Parse.User.current();
+                var currUser = Parse.User.current();
 
-                  currUser.set("friendIDs",currUserFriendsIds)
+                currUser.set("friendIDs",currUserFriendsIds)
 
-                  currUser.save(null, {
-                    success: function(response) {
-                      // Execute any logic that should take place after the object is saved.
-                      console.log('User data saved: ' + response);
-                    },
-                    error: function(response, error) {
-                      // Execute any logic that should take place if the save fails.
-                      // error is a Parse.Error with an error code and message.
-                      console.log('Failed to create save user data, with error code: ' + error.message);
-                    }
-                  });
+                currUser.save(null, {
+                  success: function(response) {
+                    // Execute any logic that should take place after the object is saved.
+                    console.log('User data saved: ' + response);
+                  },
+                  error: function(response, error) {
+                    // Execute any logic that should take place if the save fails.
+                    // error is a Parse.Error with an error code and message.
+                    console.log('Failed to create save user data, with error code: ' + error.message);
+                  }
+                });
 
 
-                } else {
-                  console.log("Friends Error:")
-                  console.log(response.error)
-                }
+              } else {
+                console.log("Friends Error:")
+                console.log(response.error)
               }
+            }
           );
           new SignedInView();
         },
@@ -589,6 +660,10 @@ $(function() {
       this.delegateEvents();
     }
   });
+  function updateFacebookFriends() {
+    console.log("updateFacebookFriends");
+    
+  }
 /***
  *     ######  ####  ######   ##    ## ########     #### ##    ##    ##     ## #### ######## ##      ## 
  *    ##    ##  ##  ##    ##  ###   ## ##     ##     ##  ###   ##    ##     ##  ##  ##       ##  ##  ## 
@@ -616,7 +691,7 @@ $(function() {
     logOut: function(e) {
       Parse.User.logOut();
 
-      new LogInView();
+      theLoginView = new LogInView();
       this.undelegateEvents();
       delete this;
     },
@@ -651,6 +726,7 @@ $(function() {
       if (Parse.User.current()) {
         theAddMovieView = new AddMovieView();
         theMainView = new MainView();
+        console.log("SETTING THE MAIN VIEW");
         new SignedInView();
       } else {
         new LogInView();

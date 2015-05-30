@@ -1,6 +1,9 @@
 * {
     /*font-family: Arial, sans;*/
     font-family: 'Nunito', sans-serif;
+    font-family: 'Arvo', sans-serif;
+    font-family: 'Josefin Slab', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-weight: 100;
 }
 html,body {
@@ -15,7 +18,12 @@ body {
     padding: 0;
     background: rgb(76, 76, 76);
 }
-
+h1 {
+    font-family: 'Arvo', sans-serif;
+}
+.subhead {
+    font-size: 22px;
+}
 ul { 
     margin: 0;
     padding: 0;
@@ -26,8 +34,18 @@ a {
 }
 .btn {
     padding: 5px 10px;
-    background: #ff6602;
-    color: #fff;
+  background: #ff6602;
+  color: #fff;
+  border: 1px solid;
+  border-radius: 5px;
+}
+.btn2 {
+    border: 1px solid;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+.facebook-login {
+    margin-top: 40px;
 }
 #wdywln-app {
     padding: 20px 50px;
@@ -35,10 +53,10 @@ a {
 
 .movie-item {
     display: inline-block;
-    margin: 0 10px 0 0;
+    margin: 10px 40px 10px 0;
     vertical-align: top;
-    margin-bottom: 10px;
     position: relative;
+    width: 160px;
 }
 .poster-container {
     height: 240px;
@@ -51,12 +69,28 @@ a {
     height: 240px;
     box-sizing: border-box;
 }
-
+.like-btn-inline {
+    font-size: 13px;
+    margin: 5px 0 0 0;
+    display: inline-block;
+    color: #998C8C;
+}
+.like-btn-inline.you-like-it {
+    color: #E5DADA;
+}
+.like-btn-inline .icon-like-filled {
+    margin-right: 5px;
+    vertical-align: middle;
+}
 .movie-title {
+    font-weight: 500;
     font-size: 12px;
     border-bottom: 1px dotted #999;
     padding-bottom: 5px;
     margin-bottom: 10px;
+}
+.movie-title .year {
+    font-size: 10px;
 }
 
 .login-info { 
@@ -78,7 +112,12 @@ a {
     font-size: 11px;
     margin-top: 5px;
 }
-
+.like-or-not-like {
+    margin-top: 5px;
+}
+.like-answer {
+    display: inline-block;
+}
 
 input#new-movie {
     width: 100%;
@@ -106,8 +145,9 @@ input#new-movie {
     display: inline-block;
     margin-right: 5px;
 } 
-.liked-by {
-    font-size: 9px;
+.metadata .plot,
+.metadata .actors {
+    display: none;
 }
 .more-info {
     display: none;
@@ -124,6 +164,9 @@ input#new-movie {
     box-shadow: 0 0 2px rgba(0,0,0,.5);
     font-size: 11px;
 }
+.actors, .plot {
+    margin-bottom: 10px;
+}
 .more-info ul {
     list-style: none;
 }   
@@ -138,11 +181,12 @@ input#new-movie {
 }
 .watch {
     display: none;
-    bottom: 0px;
+    bottom: 20px;
     position: absolute;
     border: 1px solid #FFf;
-    width: 160px;
+    width: 140px;
     text-align: center;
     box-sizing: border-box;
+    margin: 10px 10px;
 }
 
