@@ -35,10 +35,6 @@
             xfbml      : true  // parse XFBML
         });
 
-        console.log("THIS",this)
-        console.log("THIS",$("div.content"))
-
-        console.log("GETTING BIG OL");
         window.bigOlScope.theMainView.getAllMovies();
 
         Parse.FacebookUtils.logIn("email,user_friends,read_friendlists", {
