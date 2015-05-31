@@ -129,23 +129,40 @@ $(function() {
     },
     getLikedByFriends: function() {
       var self = this;
+
+      // All users who like this movie:
+      // this.model.attributes.likedBy
+
+      // All friends of this user: 
+      // Parse.User.current().get("friendIDs")
+
       var query = new Parse.Query(User);
       query.containedIn("facebookID", this.model.attributes.likedBy);
       query.find({
-        success: function(results) {
-          console.log("results",results);
+        success: function(usersWhoLikeTheMovie) {
           self.likedByFriends = []
-          for (var i = 0; i < results.length; i++) {
-            self.likedByFriends[i] = {};
-            self.likedByFriends[i].firstName = results[i].attributes.firstName;
-            self.likedByFriends[i].lastName = results[i].attributes.lastName;
+          for (var i = 0; i < usersWhoLikeTheMovie.length; i++) {
+
+            if( $.inArray(usersWhoLikeTheMovie[i].attributes.facebookID, Parse.User.current().get("friendIDs")) > -1 || usersWhoLikeTheMovie[i].attributes.facebookID === Parse.User.current().escape("facebookID")) {
+              var oneFriend = {};
+              oneFriend.firstName = usersWhoLikeTheMovie[i].attributes.firstName;
+              oneFriend.lastName = usersWhoLikeTheMovie[i].attributes.lastName;
+              self.likedByFriends.push(oneFriend);
+            }
+            
           };
+          
+          // Add "you like it" class if you like it to like button
           if($.inArray(Parse.User.current().escape("facebookID"), self.model.attributes.likedBy) > -1) {
             $(self.el).find(".like-btn-inline").addClass("you-like-it");
           }
+
+          // Populate like button number:
+          $(self.el).find(".num-of-likes").text(self.likedByFriends.length);
+          
+          // Create list of friends names who liked the movie. 
           $(self.el).find(".more-info ul li").remove();
           var moreInfoUl = $(self.el).find(".more-info ul");
-          console.log("self.likedByFriends",self.likedByFriends)
           for(i=0 ; i < self.likedByFriends.length ; i++ ) {
             moreInfoUl.append("<li class='liked-by-name'>"+self.likedByFriends[i].firstName+" "+self.likedByFriends[i].lastName+"</li>")
           }
