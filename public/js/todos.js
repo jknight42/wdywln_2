@@ -534,7 +534,7 @@ $(function() {
 
       this.newMovie = new Movie();
 
-      if($("#new-movie").val().length > 3) {
+      if($("#new-movie").val().length > 1) {
         $("#autocomplete-list").html('Searching ...');
 
         var dataObj = {
@@ -551,7 +551,7 @@ $(function() {
           {
             $("#autocomplete-list").html('');
             var tvAndMovieList = jsonData.Search;
-            console.log(tvAndMovieList);
+            console.log(jsonData);
             if(tvAndMovieList) {
 
               for (var i = 0; i < 5; i++) {
