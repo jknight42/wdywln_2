@@ -1,6 +1,5 @@
 
 $(function() {
-  console.log("todos.js this",this)
   Parse.$ = jQuery;
 
   // Initialize Parse with your Parse application javascript keys
@@ -253,10 +252,9 @@ $(function() {
     el: ".content",
 
     initialize: function() {
-      console.log("MainView init",this);
       var self = this;
 
-      _.bindAll(this, 'addOne', 'addAll', 'friendsAddOne', 'friendsAddAll', 'render','logOut',"getAllMovies");
+      _.bindAll(this, 'addOne', 'addAll', 'friendsAddOne', 'friendsAddAll', 'render','logOut','getAllMovies');
 
       // Hide intro text once they are logged in
       $("#intro").hide();
@@ -265,14 +263,11 @@ $(function() {
       
       this.$el.html(_.template($("#main-movies-template").html()));
       
-      console.log("Parse.User",Parse.User.current());
+      console.log("----this",this);
       this.getAllMovies();
-
-      
 
     },
     getAllMovies: function() {
-      console.log("getAllMovies");
       var yourFriendsIds = Parse.User.current().get("friendIDs");
 
       // Create our collection of Movies
@@ -295,7 +290,6 @@ $(function() {
 
       // Setup the query for the collection to look for Movies that the current user's friends liked
       this.yourFriendsMovies.query = new Parse.Query(Movie);
-      console.log("yourFriendsIds",yourFriendsIds)
       this.yourFriendsMovies.query.containedIn("likedBy", yourFriendsIds);
         
       this.yourFriendsMovies.bind('add',     this.friendsAddOne);
@@ -486,7 +480,6 @@ $(function() {
         url: 'http://www.omdbapi.com/',
         dataType: 'jsonp',
         success: function(jsonData) {
-          console.log("getposter",jsonData)
           self.newMovie.set("posterUrl", "http://img.omdbapi.com/?i="+dataObj.i+"&apikey=24d1a7e9");
           self.newMovie.set("plot", jsonData.Plot);
           self.newMovie.set("actors", jsonData.Actors);
@@ -551,25 +544,24 @@ $(function() {
           {
             $("#autocomplete-list").html('');
             var tvAndMovieList = jsonData.Search;
-            console.log(jsonData);
             if(tvAndMovieList) {
 
               for (var i = 0; i < 5; i++) {
 
-                var currLi = $("<li/>");
-                // $("#autocomplete-list").append("<img src='"+tvAndMovieList.movies[i].posters.profile+"' />");
-                currLi.append("<a class='title' href='#'>"+tvAndMovieList[i].Title+"</a>");
-                var metadata = $("<div class='metadata' />");
-                currLi.append(metadata);
-                metadata.append("<div class='year'>"+tvAndMovieList[i].Year+"</div>");
-                metadata.append("<div class='type'>"+tvAndMovieList[i].Type+"</div>");
+                  var currLi = $("<li/>");
+                  // $("#autocomplete-list").append("<img src='"+tvAndMovieList.movies[i].posters.profile+"' />");
+                  currLi.append("<a class='title' href='#'>"+tvAndMovieList[i].Title+"</a>");
+                  var metadata = $("<div class='metadata' />");
+                  currLi.append(metadata);
+                  metadata.append("<div class='year'>"+tvAndMovieList[i].Year+"</div>");
+                  metadata.append("<div class='type'>"+tvAndMovieList[i].Type+"</div>");
 
-                currLi.attr("title",tvAndMovieList[i].Title);
-                currLi.attr("date",tvAndMovieList[i].Year);
-                currLi.attr("type",tvAndMovieList[i].Type);
-                currLi.attr("imdbId",tvAndMovieList[i].imdbID);
-                                
-                $("#autocomplete-list").append(currLi);
+                  currLi.attr("title",tvAndMovieList[i].Title);
+                  currLi.attr("date",tvAndMovieList[i].Year);
+                  currLi.attr("type",tvAndMovieList[i].Type);
+                  currLi.attr("imdbId",tvAndMovieList[i].imdbID);
+                                  
+                  $("#autocomplete-list").append(currLi);
               };
             }
           },
@@ -620,7 +612,6 @@ $(function() {
                   
                   theAddMovieView = new AddMovieView();
                   theMainView = new MainView();
-                  console.log("SETTING THE MAIN VIEW");
                 } else {
                   console.log("Error:")
                   console.log(response.error)
@@ -630,7 +621,6 @@ $(function() {
           FB.api(
             "/v1.0/me/friends",
             function (response) {
-              console.log("response",response)
               if (response && !response.error) {
                 var currUserFriendsIds = [];
                 for (var i = response.data.length - 1; i >= 0; i--) {
@@ -701,7 +691,6 @@ $(function() {
 
     initialize: function() {
       var self = this;
-      console.log(this.$el);
       this.$el.html(_.template($("#signed-in-template").html()));
 
     },
@@ -713,7 +702,6 @@ $(function() {
       delete this;
     },
     showAddMovie:function() {
-      console.log(this);
       theAddMovieView.showAddMovie();
     }
 
@@ -743,7 +731,6 @@ $(function() {
       if (Parse.User.current()) {
         theAddMovieView = new AddMovieView();
         theMainView = new MainView();
-        console.log("SETTING THE MAIN VIEW");
         new SignedInView();
       } else {
         new LogInView();
