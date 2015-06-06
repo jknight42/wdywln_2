@@ -547,7 +547,7 @@ $(function() {
             if(tvAndMovieList) {
 
               for (var i = 0; i < 5; i++) {
-
+                if(tvAndMovieList.length > i) {
                   var currLi = $("<li/>");
                   // $("#autocomplete-list").append("<img src='"+tvAndMovieList.movies[i].posters.profile+"' />");
                   currLi.append("<a class='title' href='#'>"+tvAndMovieList[i].Title+"</a>");
@@ -562,6 +562,7 @@ $(function() {
                   currLi.attr("imdbId",tvAndMovieList[i].imdbID);
                                   
                   $("#autocomplete-list").append(currLi);
+                }
               };
             }
           },
