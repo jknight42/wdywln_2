@@ -620,6 +620,17 @@ $(function() {
               }
           );
           FB.api(
+              "/v1.0/me/picture",
+              function (response) {
+                if (response && !response.error) {
+                  Parse.User.current().save("profileImage",response.data.url);
+                } else {
+                  console.log("Error:")
+                  console.log(response.error)
+                }
+              }
+          );
+          FB.api(
             "/v1.0/me/friends",
             function (response) {
               if (response && !response.error) {
@@ -635,7 +646,7 @@ $(function() {
                 currUser.save(null, {
                   success: function(response) {
                     // Execute any logic that should take place after the object is saved.
-                    console.log('User data saved: ' + response);
+                    console.log('User data saved: ',response);
                   },
                   error: function(response, error) {
                     // Execute any logic that should take place if the save fails.
