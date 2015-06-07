@@ -149,6 +149,7 @@ input#new-movie {
 .metadata .actors {
     display: none;
 }
+
 .more-info {
     display: none;
     position: absolute;
@@ -166,6 +167,9 @@ input#new-movie {
 }
 .actors, .plot {
     margin-bottom: 10px;
+}
+.plot {
+    display: none;
 }
 .more-info ul {
     list-style: none;
