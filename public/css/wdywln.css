@@ -73,10 +73,10 @@ a {
     font-size: 13px;
     margin: 5px 0 0 0;
     display: inline-block;
-    color: #998C8C;
+    color: #CBBABA;
 }
 .like-btn-inline.you-like-it {
-    color: #E5DADA;
+    color: #FFF;
 }
 .like-btn-inline .icon-like-filled {
     margin-right: 5px;
