@@ -291,6 +291,7 @@ $(function() {
       // Setup the query for the collection to look for Movies that the current user's friends liked
       this.yourFriendsMovies.query = new Parse.Query(Movie);
       this.yourFriendsMovies.query.containedIn("likedBy", yourFriendsIds);
+      this.yourFriendsMovies.query.descending("updatedAt");
         
       this.yourFriendsMovies.bind('add',     this.friendsAddOne);
       this.yourFriendsMovies.bind('reset',   this.friendsAddAll);
