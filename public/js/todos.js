@@ -480,10 +480,21 @@ $(function() {
         url: 'http://www.omdbapi.com/',
         dataType: 'jsonp',
         success: function(jsonData) {
-          self.newMovie.set("posterUrl", "http://img.omdbapi.com/?i="+dataObj.i+"&apikey=24d1a7e9");
+
           self.newMovie.set("plot", jsonData.Plot);
           self.newMovie.set("actors", jsonData.Actors);
-          self.addMovieToList();
+          $.get("http://img.omdbapi.com/?i="+dataObj.i+"&apikey=24d1a7e9")
+              .done(function() { 
+                  // image exists.
+                  console.log("image exists!");
+                  self.newMovie.set("posterUrl", "http://img.omdbapi.com/?i="+dataObj.i+"&apikey=24d1a7e9");
+                  self.addMovieToList();
+              }).fail(function() { 
+                  // Image doesn't exist - do something else.
+                  self.newMovie.set("posterUrl", "images/missing_poster.jpg");
+                  self.addMovieToList();
+              });
+          
         },
         error: function(error) {
           console.log("Error with image")
@@ -633,6 +644,7 @@ $(function() {
           FB.api(
             "/v1.0/me/friends",
             function (response) {
+              console.log("fetching friends")
               if (response && !response.error) {
                 var currUserFriendsIds = [];
                 for (var i = response.data.length - 1; i >= 0; i--) {
