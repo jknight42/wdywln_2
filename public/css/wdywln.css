@@ -53,7 +53,7 @@ a {
 
 .movie-item {
     display: inline-block;
-    margin: 10px 40px 10px 0;
+    padding: 10px 40px 30px 0;
     vertical-align: top;
     position: relative;
     width: 160px;
@@ -71,14 +71,15 @@ a {
 }
 .like-btn-inline {
     font-size: 13px;
-    margin: 5px 0 0 0;
+    margin: 5px 5px 0px 0;
     display: inline-block;
     color: #CBBABA;
 }
 .like-btn-inline.you-like-it {
     color: #FFF;
 }
-.like-btn-inline .icon-like-filled {
+.like-btn-inline .icon-like-filled,
+.like-btn-inline .icon-dislike-1 {
     margin-right: 5px;
     vertical-align: middle;
 }
@@ -153,7 +154,7 @@ input#new-movie {
 .more-info {
     display: none;
     position: absolute;
-    left: 170px;
+    left: 175px;
     top: 0;
     width: 180px;
     min-height: 100px;
@@ -165,6 +166,31 @@ input#new-movie {
     box-shadow: 0 0 2px rgba(0,0,0,.5);
     font-size: 11px;
 }
+.more-info:after, .more-info:before {
+    right: 100%;
+    top: 15%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+}
+
+.more-info:after {
+    border-color: rgba(255, 255, 255, 0);
+    border-right-color: #fff;
+    border-width: 10px;
+    margin-top: -10px;
+}
+.more-info:before {
+    border-color: rgba(194, 225, 245, 0);
+    border-right-color: #c2e1f5;
+    border-width: 11px;
+    margin-top: -11px;
+}
+
+
 .actors, .plot {
     margin-bottom: 10px;
 }
@@ -180,17 +206,11 @@ input#new-movie {
 .movie-item:hover .more-info {
     display: block;
 }
-.movie-item:hover .watch {
-    display: block;
-}
 .watch {
-    display: none;
-    bottom: 20px;
-    position: absolute;
     border: 1px solid #FFf;
     width: 140px;
     text-align: center;
     box-sizing: border-box;
-    margin: 10px 10px;
+    margin: 20px auto 0 auto;
 }
 
