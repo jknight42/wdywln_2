@@ -192,10 +192,11 @@
 
     
     <script type="text/template" id="item-template">
-      	<a class="view" href="http://www.amazon.com/s/?url=search-alias%3Daps&tag=fittyo-20&field-keywords=<%= _.escape(title) %>" target="_blank">
+      	<div class="view">
           <div class="poster-container">
-            <img src="<%= _.escape(posterUrl) %>" />
-            
+            <a href="http://www.amazon.com/s/?url=search-alias%3Daps&tag=fittyo-20&field-keywords=<%= _.escape(title) %>" target="_blank">
+              <img src="<%= _.escape(posterUrl) %>" />
+            </a>
           </div>
 
           <div class="more-info">
@@ -211,9 +212,13 @@
               <ul>
               </ul>
             </div>
-            <div class="btn watch">Watch now</div>
+
+            <a class="btn watch" href="http://www.amazon.com/s/?url=search-alias%3Daps&tag=fittyo-20&field-keywords=<%= _.escape(title) %>" target="_blank">Watch now</a>
+            <div class="secondary-ctas">
+              <a href="javascript:void(0);" class="like-btn">Like</a>
+            </div>
           </div>
-      	</a>
+      	</div>
     </script>
 
    

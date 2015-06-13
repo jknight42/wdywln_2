@@ -112,7 +112,7 @@ $(function() {
     // The DOM events specific to an item.
     events: {
       "mouseover .poster-container": "showMovieInfo",
-      "click .like-btn-inline": "likeMovie"
+      "click .like-btn": "likeMovie"
     },
 
     initialize: function() {
@@ -146,24 +146,26 @@ $(function() {
               var oneFriend = {};
               oneFriend.firstName = usersWhoLikeTheMovie[i].attributes.firstName;
               oneFriend.lastName = usersWhoLikeTheMovie[i].attributes.lastName;
+              oneFriend.profileImage = usersWhoLikeTheMovie[i].attributes.profileImage;
               self.likedByFriends.push(oneFriend);
             }
             
           };
           
-          // Add "you like it" class if you like it to like button
-          if($.inArray(Parse.User.current().escape("facebookID"), self.model.attributes.likedBy) > -1) {
-            $(self.el).find(".like-btn-inline").addClass("you-like-it");
-          }
-
           // Populate like button number:
           $(self.el).find(".num-of-likes").text(self.likedByFriends.length);
           
           // Create list of friends names who liked the movie. 
           $(self.el).find(".more-info ul li").remove();
           var moreInfoUl = $(self.el).find(".more-info ul");
+          var profileImageUrl = "";
           for(i=0 ; i < self.likedByFriends.length ; i++ ) {
-            moreInfoUl.append("<li class='liked-by-name'>"+self.likedByFriends[i].firstName+" "+self.likedByFriends[i].lastName+"</li>")
+            if(typeof self.likedByFriends[i].profileImage === "undefined") {
+              profileImageUrl = "images/missing_profile_image.jpg";
+            } else {
+              profileImageUrl = self.likedByFriends[i].profileImage;
+            }
+            moreInfoUl.append("<li class='liked-by-name'><img src='"+ profileImageUrl +"' class='profile-image'/>"+self.likedByFriends[i].firstName+" "+self.likedByFriends[i].lastName+"</li>")
           }
         },
         error: function(error) {
@@ -180,7 +182,7 @@ $(function() {
       var self = this;
       
       // Fade out like button as a loading indicator: 
-      $(self.el).find(".like-btn-inline").animate({"opacity":.25},500);
+      // $(self.el).find(".like-btn").animate({"opacity":.25},500);
 
       if( $.inArray(Parse.User.current().escape("facebookID"), this.model.attributes.likedBy) > -1 ) {
         // user already likes this movie, change to unlike. 
@@ -199,7 +201,7 @@ $(function() {
               // The object was refreshed successfully.
               self.getLikedByFriends();
               self.render();
-              $(self.el).find(".like-btn-inline").animate({"opacity":1},1000);
+              $(self.el).find(".like-btn").animate({"opacity":1},1000);
             },
             error: function(myObject, error) {
               // The object was not refreshed successfully.
@@ -277,6 +279,7 @@ $(function() {
       this.yourMovies.query = new Parse.Query(Movie);
       // this.yourMovies.query.equalTo("user", Parse.User.current());
       this.yourMovies.query.containedIn("likedBy", [Parse.User.current().escape("facebookID")]);
+      this.yourMovies.query.descending("updatedAt");
         
       this.yourMovies.bind('add',     this.addOne);
       this.yourMovies.bind('reset',   this.addAll);

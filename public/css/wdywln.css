@@ -53,7 +53,8 @@ a {
 
 .movie-item {
     display: inline-block;
-    padding: 10px 40px 30px 0;
+    margin: 10px 20px 30px 0;
+    padding: 0 20px 0 0;
     vertical-align: top;
     position: relative;
     width: 160px;
@@ -68,20 +69,6 @@ a {
     width: 160px;
     height: 240px;
     box-sizing: border-box;
-}
-.like-btn-inline {
-    font-size: 13px;
-    margin: 5px 5px 0px 0;
-    display: inline-block;
-    color: #CBBABA;
-}
-.like-btn-inline.you-like-it {
-    color: #FFF;
-}
-.like-btn-inline .icon-like-filled,
-.like-btn-inline .icon-dislike-1 {
-    margin-right: 5px;
-    vertical-align: middle;
 }
 .movie-title {
     font-weight: 500;
@@ -189,6 +176,13 @@ input#new-movie {
     border-width: 11px;
     margin-top: -11px;
 }
+.profile-image {
+    width: 30px;
+    margin-right: 5px;
+    border-radius: 15px;
+    border: 1px solid #666;
+    vertical-align: middle;
+}
 
 
 .actors, .plot {
@@ -212,5 +206,10 @@ input#new-movie {
     text-align: center;
     box-sizing: border-box;
     margin: 20px auto 0 auto;
+    display: block;
+}
+.secondary-ctas {
+    text-align: center;
+    margin: 5px 0;
 }
 
