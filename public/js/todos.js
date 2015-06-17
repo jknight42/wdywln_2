@@ -471,27 +471,42 @@ $(function() {
       // GET MOVIE POSTER: 
       // http://img.omdbapi.com/?i=tt2294629&apikey=24d1a7e9 
       // http://www.omdbapi.com/?i=tt1127180&plot=short&r=json
-      var dataObj = {
-          i: this.newMovie.get("imdbId"),
-          apiKey: '24d1a7e9',
-          r: 'JSON'
-      }; 
-      var self = this;      
+
+      // TMDB:
+      // https://api.themoviedb.org/3/movie/551?api_key=773a2a626be46f73173ee702587528c5
+      // 551 is movie id.
+      // Images:
+      // http://image.tmdb.org/t/p/w500/hpt3aa5i0TrSAnEdl3VJrRrje8C.jpg
+      // THis path can change and we need configuration information to know if it has changed. 
+      // http://docs.themoviedb.apiary.io/#reference/configuration/configuration
+
+      // FIND USING IMDB ID:
+      // http://api.themoviedb.org/3/find/
+      // http://api.themoviedb.org/3/find/tt3079380?api_key=773a2a626be46f73173ee702587528c5&external_source=imdb_id
+
+      var self = this;  
+      var resultsObj = [];  
+      var imagePath = "";  
       $.ajax({
         type: 'GET',
         async: false, 
-        data: dataObj,
-        url: 'http://www.omdbapi.com/',
+        url: 'http://api.themoviedb.org/3/find/'+self.newMovie.get("imdbId")+'?api_key=773a2a626be46f73173ee702587528c5&external_source=imdb_id',
         dataType: 'jsonp',
         success: function(jsonData) {
+          if(!jQuery.isEmptyObject(jsonData.movie_results)) {
+            resultsObj = jsonData.movie_results;
+          } else if(!jQuery.isEmptyObject(jsonData.tv_results)) {
+            resultsObj = jsonData.tv_results;
+          }
 
-          self.newMovie.set("plot", jsonData.Plot);
-          self.newMovie.set("actors", jsonData.Actors);
-          $.get("http://img.omdbapi.com/?i="+dataObj.i+"&apikey=24d1a7e9")
+          imagePath = "http://image.tmdb.org/t/p/w185/"+resultsObj[0].poster_path;
+          self.newMovie.set("plot", resultsObj.overview);
+          // self.newMovie.set("actors", resultsObj.Actors);
+          $.get(imagePath)
               .done(function() { 
                   // image exists.
                   console.log("image exists!");
-                  self.newMovie.set("posterUrl", "http://img.omdbapi.com/?i="+dataObj.i+"&apikey=24d1a7e9");
+                  self.newMovie.set("posterUrl", imagePath);
                   self.addMovieToList();
               }).fail(function() { 
                   // Image doesn't exist - do something else.
