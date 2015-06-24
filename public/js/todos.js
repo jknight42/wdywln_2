@@ -271,12 +271,18 @@ $(function() {
       // Hide intro text once they are logged in
       $("#intro").hide();
 
+      $(document).on($.modal.CLOSE, this.closeModal);
+
       // Main movies management template
       
       this.$el.html(_.template($("#main-movies-template").html()));
       
       this.getAllMovies();
 
+    },
+    closeModal: function() {
+      console.log("closed modal");
+      $("#trailer-box iframe").attr("src","about:blank");
     },
     getAllMovies: function() {
       var yourFriendsIds = Parse.User.current().get("friendIDs");
@@ -372,59 +378,67 @@ $(function() {
 
       // Setup the query for the collection to look for Movies that the current user's friends liked
       this.allTheMovies.query = new Parse.Query(Movie);
-      this.allTheMovies.query.doesNotExist("tmdbId");
+      this.allTheMovies.query.doesNotExist("youTubeTrailerUrl");
 
       // this.allTheMovies.fetch();
 
       this.allTheMovies.query.find().then(function(queryResults) {
         self.queryResults = queryResults;
         var jsonResults = [];
-        for (var i = 0; i < queryResults.length; i++) {
-          var theMovie = queryResults[i];
-          self.retroFitOneMovie(theMovie, theMovie.attributes.imdbId);
-           
+
+        for (var i = 0; i < self.queryResults.length; i++) {
+          self.doSetTimeout(self.queryResults[i],i)
         };
       });
 
     },
-    retroFitOneMovie: function(theOneMovie,theImdbId) {
+    doSetTimeout: function(theMovie,i) {
       var self = this;
-      self.theImdbId = theImdbId;
-      console.log("retroFitOneMovie",theOneMovie.attributes.title,theImdbId);
+      setTimeout(function() {
+        self.retroFitOneMovie(theMovie);
+      }, 1000*i );
+    },
+    retroFitOneMovie: function(theOneMovie) {
+      var self = this;
+      var movieOrTv = "";
+
+      if(theOneMovie.get("type") == "series") {
+        movieOrTv = "tv";
+      } else if(theOneMovie.get("type") == "movie") {
+        movieOrTv = "movie";
+      }
+      console.log(theOneMovie.get("title"));
       $.ajax({
           type: 'GET',
           async: false, 
-          url: 'http://api.themoviedb.org/3/find/'+theImdbId+'?api_key=773a2a626be46f73173ee702587528c5&external_source=imdb_id',
+          url: 'http://api.themoviedb.org/3/'+movieOrTv+'/'+theOneMovie.get("tmdbId")+'/videos?api_key=773a2a626be46f73173ee702587528c5',
           dataType: 'jsonp',
           success: function(jsonData) {
-            // console.log("success",self.theOneMovie.attributes.title)
-            if(!jQuery.isEmptyObject(jsonData.movie_results)) {
-              jsonResults = jsonData.movie_results;
-              console.log("success",jsonResults[0].title);
-            } else if(!jQuery.isEmptyObject(jsonData.tv_results)) {
-              jsonResults = jsonData.tv_results;
-              console.log("success",jsonResults[0].name);
+            resultsObj = jsonData.results;
+            if(resultsObj[0].site == "YouTube" && resultsObj[0].type == "Trailer") {
+              theOneMovie.set("youTubeTrailerUrl", "http://www.youtube.com/embed/"+resultsObj[0].key);
             }
-            theOneMovie.set("tmdbId",jsonResults[0].id);
             theOneMovie.save({
             }, {
               success: function(savedMovie) {
                 // The object was saved successfully.
-                console.log("Saved tmdbId");
+                console.log("Saved trailer");
               },
               error: function(savedMovie, error) {
                 // The save failed.
                 // error is a Parse.Error with an error code and message.
-                console.log("Error saving tmbdid");
+                console.log("Error saving trailer");
                 console.log(error);
               }
             });
-            
           },
           error: function(error) {
-            console.log("Error setting tmdbId")
-            // console.log(error)
+            console.log("Error getting trailer")
+            console.log(error)
           } 
+            
+            
+        
 
         });
     }
@@ -568,7 +582,7 @@ $(function() {
       $.ajax({
         type: 'GET',
         async: false, 
-        url: 'http://api.themoviedb.org/3/find/'+self.newMovie.get("imdbId")+'?api_key=773a2a626be46f73173ee702587528c5&external_source=imdb_id',
+        url: 'http://api.themoviedb.org/3/'+movieOrTv+'/'+self.newMovie.get("tmdbId")+'/videos?api_key=773a2a626be46f73173ee702587528c5',
         dataType: 'jsonp',
         success: function(jsonData) {
           if(!jQuery.isEmptyObject(jsonData.movie_results)) {
