@@ -22,7 +22,6 @@ $(function() {
       title: "empty..",
       date: "0000",
       type: "unknown",
-      isGood: false,
       likedBy: [],
       notLikedBy: [],
       posterUrl: 'blank'
@@ -73,7 +72,12 @@ $(function() {
     model: Movie,
 
   });
+  var AllMovieList = Parse.Collection.extend({
 
+    // Reference to this collection's model.
+    model: Movie,
+
+  });
   var YourFriendsMovieList = Parse.Collection.extend({
 
     // Reference to this collection's model.
@@ -112,7 +116,8 @@ $(function() {
     // The DOM events specific to an item.
     events: {
       "mouseover .poster-container": "showMovieInfo",
-      "click .like-btn": "likeMovie"
+      "click .like-btn": "likeMovie",
+      "click .trailer-btn": "showTrailer"
     },
 
     initialize: function() {
@@ -177,6 +182,10 @@ $(function() {
     },
     showMovieInfo: function() {
 
+    },
+    showTrailer: function() {
+      $("#trailer-box iframe").attr("src",this.model.attributes.youTubeTrailerUrl);
+      $("#trailer-box").modal();
     },
     likeMovie: function() {
       var self = this;
@@ -249,6 +258,7 @@ $(function() {
     // Delegated events for creating new items, and clearing completed ones.
     events: {
       "click .log-out": "logOut",
+      "click h2": "retroFitMovies"
     },
 
     el: ".content",
@@ -265,7 +275,6 @@ $(function() {
       
       this.$el.html(_.template($("#main-movies-template").html()));
       
-      console.log("----this",this);
       this.getAllMovies();
 
     },
@@ -351,6 +360,75 @@ $(function() {
       this.$("#friends-movies-list").html("");
       this.yourFriendsMovies.each(this.friendsAddOne);
     },
+    retroFitMovies: function() {
+      console.log("retroFitMovies");
+      // a catch all function to fix movies already added to the database with different kinds of new shit. 
+      var self = this;
+      var currResult;
+      self.queryResults = []
+
+      
+      this.allTheMovies = new AllMovieList;
+
+      // Setup the query for the collection to look for Movies that the current user's friends liked
+      this.allTheMovies.query = new Parse.Query(Movie);
+      this.allTheMovies.query.doesNotExist("tmdbId");
+
+      // this.allTheMovies.fetch();
+
+      this.allTheMovies.query.find().then(function(queryResults) {
+        self.queryResults = queryResults;
+        var jsonResults = [];
+        for (var i = 0; i < queryResults.length; i++) {
+          var theMovie = queryResults[i];
+          self.retroFitOneMovie(theMovie, theMovie.attributes.imdbId);
+           
+        };
+      });
+
+    },
+    retroFitOneMovie: function(theOneMovie,theImdbId) {
+      var self = this;
+      self.theImdbId = theImdbId;
+      console.log("retroFitOneMovie",theOneMovie.attributes.title,theImdbId);
+      $.ajax({
+          type: 'GET',
+          async: false, 
+          url: 'http://api.themoviedb.org/3/find/'+theImdbId+'?api_key=773a2a626be46f73173ee702587528c5&external_source=imdb_id',
+          dataType: 'jsonp',
+          success: function(jsonData) {
+            // console.log("success",self.theOneMovie.attributes.title)
+            if(!jQuery.isEmptyObject(jsonData.movie_results)) {
+              jsonResults = jsonData.movie_results;
+              console.log("success",jsonResults[0].title);
+            } else if(!jQuery.isEmptyObject(jsonData.tv_results)) {
+              jsonResults = jsonData.tv_results;
+              console.log("success",jsonResults[0].name);
+            }
+            theOneMovie.set("tmdbId",jsonResults[0].id);
+            theOneMovie.save({
+            }, {
+              success: function(savedMovie) {
+                // The object was saved successfully.
+                console.log("Saved tmdbId");
+              },
+              error: function(savedMovie, error) {
+                // The save failed.
+                // error is a Parse.Error with an error code and message.
+                console.log("Error saving tmbdid");
+                console.log(error);
+              }
+            });
+            
+          },
+          error: function(error) {
+            console.log("Error setting tmdbId")
+            // console.log(error)
+          } 
+
+        });
+    }
+
 
    
   });
@@ -500,18 +578,20 @@ $(function() {
           }
 
           imagePath = "http://image.tmdb.org/t/p/w185/"+resultsObj[0].poster_path;
-          self.newMovie.set("plot", resultsObj.overview);
+          console.log("resultsObj[0].id: ",resultsObj[0].id)
+          self.newMovie.set("plot", resultsObj[0].overview);
+          self.newMovie.set("tmdbId",resultsObj[0].id);
           // self.newMovie.set("actors", resultsObj.Actors);
           $.get(imagePath)
               .done(function() { 
                   // image exists.
                   console.log("image exists!");
                   self.newMovie.set("posterUrl", imagePath);
-                  self.addMovieToList();
+                  self.getOtherMovieData();
               }).fail(function() { 
                   // Image doesn't exist - do something else.
                   self.newMovie.set("posterUrl", "images/missing_poster.jpg");
-                  self.addMovieToList();
+                  self.getOtherMovieData();
               });
           
         },
@@ -521,6 +601,36 @@ $(function() {
         } 
 
       });
+    },
+    getOtherMovieData: function() {
+      var self = this;  
+      var resultsObj = []; 
+      var movieOrTv = "";
+
+      if(self.newMovie.get("type") == "series") {
+        movieOrTv = "tv";
+      } else if(self.newMovie.get("type") == "movie") {
+        movieOrTv = "movie";
+      }
+
+      $.ajax({
+        type: 'GET',
+        async: false, 
+        url: 'http://api.themoviedb.org/3/'+movieOrTv+'/'+self.newMovie.get("tmdbId")+'/videos?api_key=773a2a626be46f73173ee702587528c5',
+        dataType: 'jsonp',
+        success: function(jsonData) {
+          resultsObj = jsonData.results;
+          if(resultsObj[0].site == "YouTube" && resultsObj[0].type == "Trailer") {
+            self.newMovie.set("youTubeTrailerUrl", "http://www.youtube.com/embed/"+resultsObj[0].key);
+          }
+        },
+        error: function(error) {
+          console.log("Error with trailer")
+          console.log(error)
+        } 
+
+      });      
+      self.addMovieToList();
     },
     movieClick: function(e) {
       // Clear out autocomplete list & input box

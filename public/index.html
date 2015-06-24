@@ -216,6 +216,9 @@
             <a class="btn watch" href="http://www.amazon.com/s/?url=search-alias%3Daps&tag=fittyo-20&field-keywords=<%= _.escape(title) %>" target="_blank">Watch now</a>
             <div class="secondary-ctas">
               <a href="javascript:void(0);" class="like-btn">Like</a>
+              <% if(typeof youTubeTrailerUrl !== 'undefined') { %>
+                 | <a href="#video-iframe" class="trailer-btn">Trailer</a>
+              <% } %>
             </div>
           </div>
       	</div>
@@ -234,7 +237,11 @@
       <footer id="footer">
       </footer>
     </script>
-
+    <div id="trailer-box">
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/0b3WZ2K473s" frameborder="0" allowfullscreen></iframe>
+       <a class="btn watch" href="http://www.amazon.com/s/?url=search-alias%3Daps&tag=fittyo-20&field-keywords=<%= _.escape(title) %>" target="_blank">Watch now</a>
+    </div>
+    <!--  -->
   </body>
 
 </html>

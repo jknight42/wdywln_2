@@ -212,4 +212,7 @@ input#new-movie {
     text-align: center;
     margin: 5px 0;
 }
-
+#trailer-box {
+    display: none;
+    width: 560px;
+}
