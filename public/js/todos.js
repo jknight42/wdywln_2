@@ -184,7 +184,7 @@ $(function() {
 
     },
     showTrailer: function() {
-      $("#trailer-box iframe").attr("src",this.model.attributes.youTubeTrailerUrl);
+      $("#trailer-box iframe").attr("src","http://www.youtube.com/embed/"+this.model.attributes.youTubeId);
       $("#trailer-box").modal();
     },
     likeMovie: function() {
@@ -378,7 +378,7 @@ $(function() {
 
       // Setup the query for the collection to look for Movies that the current user's friends liked
       this.allTheMovies.query = new Parse.Query(Movie);
-      this.allTheMovies.query.doesNotExist("youTubeTrailerUrl");
+      this.allTheMovies.query.doesNotExist("youTubeId");
 
       // this.allTheMovies.fetch();
 
@@ -416,8 +416,9 @@ $(function() {
           success: function(jsonData) {
             resultsObj = jsonData.results;
             if(resultsObj[0].site == "YouTube" && resultsObj[0].type == "Trailer") {
-              theOneMovie.set("youTubeTrailerUrl", "http://www.youtube.com/embed/"+resultsObj[0].key);
+              theOneMovie.set("youTubeId", resultsObj[0].key);
             }
+
             theOneMovie.save({
             }, {
               success: function(savedMovie) {
@@ -635,7 +636,7 @@ $(function() {
         success: function(jsonData) {
           resultsObj = jsonData.results;
           if(resultsObj[0].site == "YouTube" && resultsObj[0].type == "Trailer") {
-            self.newMovie.set("youTubeTrailerUrl", "http://www.youtube.com/embed/"+resultsObj[0].key);
+            self.newMovie.set("youTubeId", resultsObj[0].key);
           }
         },
         error: function(error) {
