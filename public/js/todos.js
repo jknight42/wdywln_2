@@ -294,7 +294,7 @@ $(function() {
       this.yourMovies.query = new Parse.Query(Movie);
       // this.yourMovies.query.equalTo("user", Parse.User.current());
       this.yourMovies.query.containedIn("likedBy", [Parse.User.current().escape("facebookID")]);
-      this.yourMovies.query.descending("updatedAt");
+      this.yourMovies.query.descending("createdAt");
         
       this.yourMovies.bind('add',     this.addOne);
       this.yourMovies.bind('reset',   this.addAll);
@@ -309,7 +309,7 @@ $(function() {
       // Setup the query for the collection to look for Movies that the current user's friends liked
       this.yourFriendsMovies.query = new Parse.Query(Movie);
       this.yourFriendsMovies.query.containedIn("likedBy", yourFriendsIds);
-      this.yourFriendsMovies.query.descending("updatedAt");
+      this.yourFriendsMovies.query.descending("createdAt");
         
       this.yourFriendsMovies.bind('add',     this.friendsAddOne);
       this.yourFriendsMovies.bind('reset',   this.friendsAddAll);
