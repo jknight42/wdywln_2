@@ -580,10 +580,11 @@ $(function() {
       var self = this;  
       var resultsObj = [];  
       var imagePath = "";  
+
       $.ajax({
         type: 'GET',
         async: false, 
-        url: 'http://api.themoviedb.org/3/'+movieOrTv+'/'+self.newMovie.get("tmdbId")+'/videos?api_key=773a2a626be46f73173ee702587528c5',
+        url: 'http://api.themoviedb.org/3/find/'+self.newMovie.get("imdbId")+'?api_key=773a2a626be46f73173ee702587528c5&external_source=imdb_id',        
         dataType: 'jsonp',
         success: function(jsonData) {
           if(!jQuery.isEmptyObject(jsonData.movie_results)) {
