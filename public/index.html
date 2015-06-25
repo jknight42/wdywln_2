@@ -192,10 +192,16 @@
 
     
     <script type="text/template" id="item-template">
-
+        <%  
+          if(typeof provider !== "undefined" && provider == "netflix") {
+            ctaUrl = "http://www.netflix.com/Search/"+title;
+          } else {
+            ctaUrl = "http://www.amazon.com/s/?url=search-alias%3Dinstant-video&tag=fittyo-20&field-keywords="+title;
+          } 
+        %>
       	<div class="view">
           <div class="poster-container">
-            <a href="http://www.amazon.com/s/?url=search-alias%3Dinstant-video&tag=fittyo-20&field-keywords=<%= _.escape(title) %>" target="_blank">
+            <a href="<%= _.escape(ctaUrl) %>" target="_blank">
               <img src="<%= _.escape(posterUrl) %>" />
             </a>
           </div>
@@ -214,7 +220,7 @@
               </ul>
             </div>
 
-            <a class="btn watch" href="http://www.amazon.com/s/?url=search-alias%3Dinstant-video&tag=fittyo-20&field-keywords=<%= _.escape(title) %>" target="_blank">Watch now</a>
+            <a class="btn watch" href="<%= _.escape(ctaUrl) %>" target="_blank">Watch now</a>
             <div class="secondary-ctas">
               <a href="javascript:void(0);" class="like-btn">Like</a>
               <% if(typeof youTubeTrailerUrl !== 'undefined') { %>
