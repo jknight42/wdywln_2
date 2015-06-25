@@ -18,6 +18,11 @@ body {
     padding: 0;
     background: rgb(76, 76, 76);
 }
+#friends-movies-list-container, 
+#your-movies-list-container {
+    padding-right: 140px;
+}
+
 h1 {
     font-family: 'Arvo', sans-serif;
 }
