@@ -222,9 +222,18 @@
 
             <a class="btn watch" href="<%= _.escape(ctaUrl) %>" target="_blank">Watch now</a>
             <div class="secondary-ctas">
-              <a href="javascript:void(0);" class="like-btn">Like</a>
+              
+              
+              <% if ( likedBy.indexOf(Parse.User.current().escape("facebookID") ) == -1 ) { %>
+                <a href="javascript:void(0);" class="like-btn">Like</a>
+              <% } %>
+
+              <% if ( likedBy.indexOf(Parse.User.current().escape("facebookID"))  == -1  && (typeof youTubeId !== 'undefined') ) { %>
+                |
+              <% } %>
+
               <% if(typeof youTubeId !== 'undefined') { %>
-                 | <a href="#video-iframe" class="trailer-btn">Trailer</a>
+                 <a href="#video-iframe" class="trailer-btn">Trailer</a>
               <% } %>
             </div>
           </div>
