@@ -40,7 +40,6 @@ nav ul li {
 }
 nav a {
     color: #B8B8B8;
-    border-bottom: 2px solid transparent;
     padding: 5px 10px;
     display: block;
 }
@@ -48,7 +47,6 @@ a.nav-item-current {
     pointer-events: none;
     cursor: default;
     color: #FFF;
-    border-bottom: 2px solid rgba(255, 102, 2, 1);
 }
 
 

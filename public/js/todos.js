@@ -393,25 +393,26 @@ $(function() {
       // Fetch all the movie items for this user
       this.yourFriendsMovies.fetch();
 
+      if(typeof yourQueueArr !== 'undefined') {
+        console.log("yourQueueArr",yourQueueArr);
+        for (var i = 0; i < yourQueueArr.length; i++) {
+          yourQueueIdsArr[i] = yourQueueArr[i].id;
+        };
+        console.log("yourQueueIdsArr",yourQueueIdsArr);
+        this.yourQueuedMovies = new YourMovieList;
 
-      for (var i = 0; i < yourQueueArr.length; i++) {
-        yourQueueIdsArr[i] = yourQueueArr[i].id;
-      };
-      console.log("yourQueueIdsArr",yourQueueIdsArr);
-      this.yourQueuedMovies = new YourMovieList;
+        // Setup the query for the collection to look for Movies that the current user's friends liked
+        this.yourQueuedMovies.query = new Parse.Query(Movie);
+        this.yourQueuedMovies.query.containedIn("imdbId", yourQueueIdsArr);
+        console.log("self.yourQueuedMovies.query",self.yourQueuedMovies.query);
+          
+        this.yourQueuedMovies.bind('add',     this.queueAddOne);
+        this.yourQueuedMovies.bind('reset',   this.queueAddAll);
+        this.yourQueuedMovies.bind('all',     this.render);
 
-      // Setup the query for the collection to look for Movies that the current user's friends liked
-      this.yourQueuedMovies.query = new Parse.Query(Movie);
-      this.yourQueuedMovies.query.containedIn("imdbId", yourQueueIdsArr);
-      console.log("self.yourQueuedMovies.query",self.yourQueuedMovies.query);
-        
-      this.yourQueuedMovies.bind('add',     this.queueAddOne);
-      this.yourQueuedMovies.bind('reset',   this.queueAddAll);
-      this.yourQueuedMovies.bind('all',     this.render);
-
-      // Fetch all the movie items for this user
-      this.yourQueuedMovies.fetch();
-
+        // Fetch all the movie items for this user
+        this.yourQueuedMovies.fetch();
+      }
       state.on("change", this.filter, this);
     },
     createYourQueuedMovies: function() {
