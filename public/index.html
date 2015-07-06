@@ -144,16 +144,27 @@
         <header id="header">
           
         </header>
+        <nav>
+          <ul>
+            <li><a href="javascript:void(0);" id="nav-your-friends-like" class="nav-item-current">Your Friends Like</a></li>
+            <li><a href="javascript:void(0);" id="nav-you-like">You Like</a></li>
+            <li><a href="javascript:void(0);" id="nav-your-queue">Your Queue</a></li>
+          </ul>
+        </nav>
         <div id="friends-movies-list-container">
 
-          <h2>Your Friends Like</h2>
           <ul id="friends-movies-list">
               
           </ul>
         </div> 
         <div id="your-movies-list-container">
-          <h2>You Like</h2>
           <ul id="your-movies-list">
+            . . . 
+          </ul>
+        </div> 
+
+        <div id="queue-movies-list-container">
+          <ul id="your-queued-movies-list">
             . . . 
           </ul>
         </div> 
@@ -163,17 +174,24 @@
 
     <script type="text/template" id="add-movie-template">
       <h2>
-        What did you watch last night?
+        Add a movie or show
         <div class="subtext">... or the night before last? Or what is your favorite movie or tv show of all time?</div>
       </h2>
 
       <div class="question-part-1 " >
         <input id="new-movie" placeholder="movie, tv show, etc. " type="text" />
         <ul id="autocomplete-list">
-
+          
         </ul>
       </div>
       <div id="question-part-2" style="display: none;">
+        <div class="seen-or-not-seen">
+          <a href="javascript:void(0)" id="seen-it" class="seen-it-answer btn">I have seen it</a>
+          <a href="javascript:void(0)" id="not-seen-it" class="seen-it-answer btn">I want to see it</a>
+        </div>
+      </div>
+
+      <div id="question-part-3" style="display: none;">
         <div>Did you like it?</div>
         <div class="like-or-not-like">
           <a href="javascript:void(0)" id="liked-it" class="like-answer btn">Yes</a>
@@ -234,6 +252,24 @@
 
               <% if(typeof youTubeId !== 'undefined') { %>
                  <a href="#video-iframe" class="trailer-btn">Trailer</a>
+              <% } %>
+
+              <% 
+                // This code is a bit heavy for the template, but I wasn't sure of a better way to do it. 
+                // We could clean this up a lot if we changed the queue to just an array instead of an object
+                // ... but then we couldn't have tags for each queued item and then types of queues (comedy queue, action queue, etc)
+                var queueObjArr = Parse.User.current().get("queue");
+                var queueIdsArr = [];
+                for (i = 0; i < queueObjArr.length; i++) {
+                    queueIdsArr[i] = queueObjArr[i].id; 
+                }
+
+                if ( queueIdsArr.indexOf(imdbId) == -1 ) { 
+              %>
+              <% if ( likedBy.indexOf(Parse.User.current().escape("facebookID"))  == -1  || (typeof youTubeId !== 'undefined') ) { %>
+                |
+              <% } %>
+              <a href="javascript:void(0);" class="queue-btn">Add to queue</a>
               <% } %>
             </div>
           </div>

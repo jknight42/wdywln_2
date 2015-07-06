@@ -84,6 +84,12 @@ $(function() {
     model: Movie,
 
   });
+  var YourQueuedMovieList = Parse.Collection.extend({
+
+    // Reference to this collection's model.
+    model: Movie,
+
+  });
 
   var AutofillMovieList = Parse.Collection.extend({
 
@@ -117,7 +123,8 @@ $(function() {
     events: {
       "mouseover .poster-container": "showMovieInfo",
       "click .like-btn": "likeMovie",
-      "click .trailer-btn": "showTrailer"
+      "click .trailer-btn": "showTrailer",
+      "click .queue-btn": "addToQueue"
     },
 
     initialize: function() {
@@ -227,6 +234,30 @@ $(function() {
       });
       
     },
+    addToQueue: function() {
+      var self = this;
+      
+      // Fade out like button as a loading indicator: 
+      // $(self.el).find(".like-btn").animate({"opacity":.25},500);
+      var queueItemObject = { "id": this.model.attributes.imdbId, "tags": [] };
+      var currUser = Parse.User.current();
+
+      currUser.addUnique("queue",queueItemObject)
+
+      currUser.save(null, {
+        success: function(response) {
+          // Execute any logic that should take place after the object is saved.
+          console.log('User data saved: ',response);
+          this.theMainView.refreshMovies();
+        },
+        error: function(response, error) {
+          // Execute any logic that should take place if the save fails.
+          // error is a Parse.Error with an error code and message.
+          console.log('Failed to create save user data, with error code: ' + error.message);
+        }
+      });
+
+    },
     render: function() {
       $(this.el).html(this.template(this.model.toJSON()));
       $(this.el).addClass("movie-item");
@@ -258,7 +289,8 @@ $(function() {
     // Delegated events for creating new items, and clearing completed ones.
     events: {
       "click .log-out": "logOut",
-      "click h2": "retroFitMovies"
+      // "click h2": "retroFitMovies",
+      "click nav a": "changeMainView"
     },
 
     el: ".content",
@@ -266,7 +298,7 @@ $(function() {
     initialize: function() {
       var self = this;
 
-      _.bindAll(this, 'addOne', 'addAll', 'friendsAddOne', 'friendsAddAll', 'render','logOut','getAllMovies');
+      _.bindAll(this, 'addOne', 'addAll', 'friendsAddOne', 'friendsAddAll', 'queueAddOne', 'queueAddAll', 'render','logOut','getAllMovies');
 
       // Hide intro text once they are logged in
       $("#intro").hide();
@@ -281,11 +313,54 @@ $(function() {
 
     },
     closeModal: function() {
-      console.log("closed modal");
       $("#trailer-box iframe").attr("src","about:blank");
     },
+    changeMainView: function(e) {
+      var animSpeed = 200;
+      
+      this.hideAllMainViews(animSpeed);
+      $("#"+e.currentTarget.id).addClass("nav-item-current");
+      $("#"+e.currentTarget.id).parent("li").addClass("nav-item-current-li");
+      switch (e.currentTarget.id)
+      {
+        case "nav-your-friends-like":
+          $("#friends-movies-list-container").delay(animSpeed).fadeIn(animSpeed);
+          break;
+        case "nav-you-like":
+          $("#your-movies-list-container").delay(animSpeed).fadeIn(animSpeed);
+          break;
+        case "nav-your-queue": 
+          $("#queue-movies-list-container").delay(animSpeed).fadeIn(animSpeed);
+          break;
+
+         default: 
+           console.log('This should never happen');
+      }
+
+
+
+    },
+    hideAllMainViews: function(speed) {
+      $("#friends-movies-list-container").fadeOut(speed);
+      $("#your-movies-list-container").fadeOut(speed);
+      $("#queue-movies-list-container").fadeOut(speed);
+
+      $("#nav-your-friends-like").removeClass("nav-item-current");
+      $("#nav-you-like").removeClass("nav-item-current");
+      $("#nav-your-queue").removeClass("nav-item-current");
+
+      $("#nav-your-friends-like").parent("li").removeClass("nav-item-current-li");
+      $("#nav-you-like").parent("li").removeClass("nav-item-current-li");
+      $("#nav-your-queue").parent("li").removeClass("nav-item-current-li");
+
+    },
     getAllMovies: function() {
+      console.log("currUser",Parse.User.current());
+
       var yourFriendsIds = Parse.User.current().get("friendIDs");
+      var yourQueueArr = Parse.User.current().get("queue");
+      var yourQueueIdsArr = [];
+      var self = this;
 
       // Create our collection of Movies
       this.yourMovies = new YourMovieList;
@@ -318,12 +393,69 @@ $(function() {
       // Fetch all the movie items for this user
       this.yourFriendsMovies.fetch();
 
+
+      for (var i = 0; i < yourQueueArr.length; i++) {
+        yourQueueIdsArr[i] = yourQueueArr[i].id;
+      };
+      console.log("yourQueueIdsArr",yourQueueIdsArr);
+      this.yourQueuedMovies = new YourMovieList;
+
+      // Setup the query for the collection to look for Movies that the current user's friends liked
+      this.yourQueuedMovies.query = new Parse.Query(Movie);
+      this.yourQueuedMovies.query.containedIn("imdbId", yourQueueIdsArr);
+      console.log("self.yourQueuedMovies.query",self.yourQueuedMovies.query);
+        
+      this.yourQueuedMovies.bind('add',     this.queueAddOne);
+      this.yourQueuedMovies.bind('reset',   this.queueAddAll);
+      this.yourQueuedMovies.bind('all',     this.render);
+
+      // Fetch all the movie items for this user
+      this.yourQueuedMovies.fetch();
+
       state.on("change", this.filter, this);
     },
+    createYourQueuedMovies: function() {
+      
+    },
     refreshMovies: function() {
+      var self = this;
       console.log("refreshMovies");
       // Fetch all the movie items for this user
-      this.yourMovies.fetch();
+      Parse.User.current().fetch({
+        success: function(myObject) {
+          // The object was refreshed successfully.
+
+          self.yourMovies.fetch();
+          console.log("-- self.yourQueuedMovies.query",self.yourQueuedMovies.query);
+
+          var yourQueueArr = Parse.User.current().get("queue");
+          var yourQueueIdsArr = [];
+
+          for (var i = 0; i < yourQueueArr.length; i++) {
+            yourQueueIdsArr[i] = yourQueueArr[i].id;
+          };
+
+          self.yourQueuedMovies.query.containedIn("imdbId", yourQueueIdsArr);
+
+          self.yourQueuedMovies.fetch({
+            success: function(myObject) {
+              // The object was refreshed successfully.
+              console.log("yourQueuedMovies fetched success");
+            },
+            error: function(myObject, error) {
+              // The object was not refreshed successfully.
+              // error is a Parse.Error with an error code and message.
+              console.log("yourQueuedMovies fail", error)
+            }
+          });
+          self.yourFriendsMovies.fetch();
+        },
+        error: function(myObject, error) {
+          // The object was not refreshed successfully.
+          // error is a Parse.Error with an error code and message.
+        }
+      });
+     
     },
 
     // Logs out the user and shows the login view
@@ -353,7 +485,7 @@ $(function() {
       this.yourMovies.each(this.addOne);
     },
 
-     // Add a single movie item to the list by creating a view for it, and
+    // Add a single movie item to the list by creating a view for it, and
     // appending its element to the `<ul>`.
     friendsAddOne: function(movie) {
       var view = new MovieView({model: movie});
@@ -362,9 +494,23 @@ $(function() {
 
     // Add all items in the collection at once.
     friendsAddAll: function(collection, filter) {
-      console.log("friendsAddAll");
       this.$("#friends-movies-list").html("");
       this.yourFriendsMovies.each(this.friendsAddOne);
+    },
+
+
+    // Add a single movie item to the list by creating a view for it, and
+    // appending its element to the `<ul>`.
+    queueAddOne: function(movie) {
+      var view = new MovieView({model: movie});
+      this.$("#your-queued-movies-list").append(view.render().el);
+    },
+
+    // Add all items in the collection at once.
+    queueAddAll: function(collection, filter) {
+      console.log("queueAddAll",collection)
+      this.$("#your-queued-movies-list").html("");
+      this.yourQueuedMovies.each(this.queueAddOne);
     },
     retroFitMovies: function() {
       console.log("retroFitMovies");
@@ -461,6 +607,7 @@ $(function() {
 
     events: {
       "input input#new-movie":  "autoFillMovieNames",
+      "click .seen-it-answer": "seenItAnswerClicked",
       "click .like-answer": "likeAnswerClicked",
       "click #autocomplete-list li": "movieClick"
     },
@@ -472,6 +619,7 @@ $(function() {
       this.newMovie = new Movie();
       this.movieToBeSaved = new Movie();
       this.currMovieIsLiked = false;
+      this.currMovieToQueue = false;
       this.input = this.$("#new-movie");
       this.allCheckbox = this.$("#toggle-all")[0];
 
@@ -516,6 +664,7 @@ $(function() {
           if(results.length == 0) {
             console.log("Movie does not exist: "+self.newMovie.get("imdbId"));
             // TODO: Move existing code to create new movie here and add current user's facebook Id to the like or not like column. 
+            console.log("self.newMovie",self.newMovie)
             self.movieToBeSaved = self.newMovie;
             self.saveMovie();
           } else {
@@ -533,25 +682,32 @@ $(function() {
       });
     },
     saveMovie: function() {
+      console.log("saveMovie()");
       var publicACL = new Parse.ACL();
       publicACL.setPublicReadAccess(true);
       publicACL.setPublicWriteAccess(true);
 
-      if(this.currMovieIsLiked) {
-        this.movieToBeSaved.addUnique("likedBy",Parse.User.current().escape("facebookID"));
+      if(this.currMovieToQueue) {
+        var newQueueItemObj = { id: this.newMovie.get("imdbId"), tags: [] };
+        console.log("newQueueItemObj",newQueueItemObj);
+        Parse.User.current().addUnique("queue",newQueueItemObj);
       } else {
-        this.movieToBeSaved.addUnique("notLikedBy",Parse.User.current().escape("facebookID"));
+        if(this.currMovieIsLiked) {
+          this.movieToBeSaved.addUnique("likedBy",Parse.User.current().escape("facebookID"));
+        } else {
+          this.movieToBeSaved.addUnique("notLikedBy",Parse.User.current().escape("facebookID"));
+        }
       }
-
+      
       this.movieToBeSaved.save({
         user: Parse.User.current(),
         ACL:     publicACL,
       }, {
-        success: function(newMovie) {
+        success: function() {
           // The object was saved successfully.
           theMainView.refreshMovies();
         },
-        error: function(newMovie, error) {
+        error: function() {
           // The save failed.
           // error is a Parse.Error with an error code and message.
           console.log("Error saving");
@@ -594,7 +750,6 @@ $(function() {
           }
 
           imagePath = "http://image.tmdb.org/t/p/w185/"+resultsObj[0].poster_path;
-          console.log("resultsObj[0].id: ",resultsObj[0].id)
           self.newMovie.set("plot", resultsObj[0].overview);
           self.newMovie.set("tmdbId",resultsObj[0].id);
           // self.newMovie.set("actors", resultsObj.Actors);
@@ -650,7 +805,7 @@ $(function() {
     },
     movieClick: function(e) {
       // Clear out autocomplete list & input box
-      $("#autocomplete-list").html('');
+      $("#autocomplete-list").hide();
       $("#new-movie").val('');
 
       this.newMovie.set("title", $(e.currentTarget).attr("title") );
@@ -661,6 +816,7 @@ $(function() {
       this.showQuestionPart2();
     },
     likeAnswerClicked: function(e) {
+      console.log("likeAnswerClicked");
       $.modal.close();
       var answerId = e.currentTarget.id;
       if(answerId == 'liked-it') {
@@ -669,12 +825,28 @@ $(function() {
         this.currMovieIsLiked = false;
       }
       
-      $("#question-part-2").hide();
+      $("#question-part-3").hide();
       // this.addMovieToList();
       this.getPoster();
 
     },
+    seenItAnswerClicked: function(e) {
+      console.log("seenItAnswerClicked");
+      var answerId = e.currentTarget.id;
+      if(answerId == 'seen-it') {
+        $("#question-part-2").hide();
+        $("#question-part-3").show();
+      } else if(answerId == 'not-seen-it') {
+        //
+        $.modal.close();
+        this.currMovieToQueue = true;
+        this.getPoster();
+        console.log("add to queue");
+      }
+
+    },
     showQuestionPart2: function() {
+      // part 2 is: 
       $("#question-part-2").show();
       
     },
@@ -684,6 +856,7 @@ $(function() {
       this.newMovie = new Movie();
 
       if($("#new-movie").val().length > 1) {
+        $("#autocomplete-list").show();
         $("#autocomplete-list").html('Searching ...');
 
         var dataObj = {

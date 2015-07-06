@@ -18,9 +18,64 @@ body {
     padding: 0;
     background: rgb(76, 76, 76);
 }
+.content {
+    margin-top: 40px;
+}
+nav {
+    border-bottom: 2px solid #B8B8B8;
+    margin-bottom: 20px;
+}
+nav ul {
+    position: relative;
+    top: 2px;
+}
+nav ul li {
+    display: inline-block;
+    list-style: none;
+    margin: 0;
+    text-transform: uppercase;
+    font-size: 14px;
+    letter-spacing: .05em;
+    margin-right: 10px;
+}
+nav a {
+    color: #B8B8B8;
+    border-bottom: 2px solid transparent;
+    padding: 5px 10px;
+    display: block;
+}
+a.nav-item-current {
+    pointer-events: none;
+    cursor: default;
+    color: #FFF;
+    border-bottom: 2px solid rgba(255, 102, 2, 1);
+}
+
+
+nav li:after {
+    content: '';
+    display: block;
+    margin: auto;
+    height: 3px;
+    width: 0px;
+    background: transparent;
+    transition: width .5s ease, background-color .5s ease;
+}
+nav li.nav-item-current-li:after  {
+    width: 100%;
+    background: rgba(255, 102, 2, 1);
+}
+
+
 #friends-movies-list-container, 
-#your-movies-list-container {
+#your-movies-list-container,
+#queue-movies-list-container {
     padding-right: 140px;
+/*    width: 30%;
+    float: left;*/
+}
+#queue-movies-list-container .queue-btn-container {
+    display: none;  
 }
 
 h1 {
@@ -105,10 +160,14 @@ a {
     font-size: 11px;
     margin-top: 5px;
 }
+
+#question-part-2, #question-part-3 {
+    margin-top: 20px;
+}
 .like-or-not-like {
     margin-top: 5px;
 }
-.like-answer {
+.like-answer, .seen-it-answer {
     display: inline-block;
 }
 
