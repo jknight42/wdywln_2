@@ -607,7 +607,7 @@ $(function() {
   var AddMovieView = Parse.View.extend({
 
     events: {
-      "input input#new-movie":  "autoFillMovieNames",
+      "input input#new-movie":  "inputKeyPress",
       "click .seen-it-answer": "seenItAnswerClicked",
       "click .like-answer": "likeAnswerClicked",
       "click #autocomplete-list li": "movieClick"
@@ -736,7 +736,8 @@ $(function() {
 
       var self = this;  
       var resultsObj = [];  
-      var imagePath = "";  
+      var imagePath = ""; 
+      var keypressTimer = 0; 
 
       $.ajax({
         type: 'GET',
@@ -851,12 +852,21 @@ $(function() {
       $("#question-part-2").show();
       
     },
+    inputKeyPress: function() {
+      $("#autocomplete-list").html('Waiting ...');
+      if (this.keypressTimer) {
+        clearTimeout(this.keypressTimer);
+      }
+
+      this.keypressTimer = setTimeout(this.autoFillMovieNames, 700);
+
+    },
     autoFillMovieNames: function(e) {
       var self = this;
 
       this.newMovie = new Movie();
 
-      if($("#new-movie").val().length > 1) {
+      if($("#new-movie").val().length > 0) {
         $("#autocomplete-list").show();
         $("#autocomplete-list").html('Searching ...');
 
@@ -894,6 +904,8 @@ $(function() {
                   $("#autocomplete-list").append(currLi);
                 }
               };
+            } else {
+               $("#autocomplete-list").html('No results found for <strong>"'+$("#new-movie").val()+'"</strong>');
             }
           },
           error: function(e) {
