@@ -885,8 +885,8 @@ $(function() {
             $("#autocomplete-list").html('');
             var tvAndMovieList = jsonData.Search;
             if(tvAndMovieList) {
-
-              for (var i = 0; i < 5; i++) {
+              console.log("tvAndMovieList",tvAndMovieList)
+              for (var i = 0; i < tvAndMovieList.length; i++) {
                 if(tvAndMovieList.length > i) {
                   var currLi = $("<li/>");
                   // $("#autocomplete-list").append("<img src='"+tvAndMovieList.movies[i].posters.profile+"' />");
