@@ -708,23 +708,18 @@ $(function() {
           // The object was saved successfully.
           theMainView.refreshMovies();
         },
-        error: function() {
+        error: function(error) {
           // The save failed.
           // error is a Parse.Error with an error code and message.
           console.log("Error saving");
           console.log(error);
-          console.log(newMovie);
         }
       });
     },
-    getPoster: function() {
-      // GET MOVIE POSTER: 
-      // http://img.omdbapi.com/?i=tt2294629&apikey=24d1a7e9 
-      // http://www.omdbapi.com/?i=tt1127180&plot=short&r=json
+    getBasicMovieData: function() {
+      // getBasicMovieData: 
+      // movie poster, imdbId, etc.
 
-      // TMDB:
-      // https://api.themoviedb.org/3/movie/551?api_key=773a2a626be46f73173ee702587528c5
-      // 551 is movie id.
       // Images:
       // http://image.tmdb.org/t/p/w500/hpt3aa5i0TrSAnEdl3VJrRrje8C.jpg
       // THis path can change and we need configuration information to know if it has changed. 
@@ -733,49 +728,91 @@ $(function() {
       // FIND USING IMDB ID:
       // http://api.themoviedb.org/3/find/
       // http://api.themoviedb.org/3/find/tt3079380?api_key=773a2a626be46f73173ee702587528c5&external_source=imdb_id
+      // http://api.themoviedb.org/3/movie/49849?api_key=773a2a626be46f73173ee702587528c5
 
       var self = this;  
       var resultsObj = [];  
       var imagePath = ""; 
       var keypressTimer = 0; 
 
+      if(self.newMovie.get("type") == "series") {
+        movieOrTv = "tv";
+      } else if(self.newMovie.get("type") == "movie") {
+        movieOrTv = "movie";
+      }
+
+
       $.ajax({
         type: 'GET',
         async: false, 
-        url: 'http://api.themoviedb.org/3/find/'+self.newMovie.get("imdbId")+'?api_key=773a2a626be46f73173ee702587528c5&external_source=imdb_id',        
+        url: 'http://api.themoviedb.org/3/'+movieOrTv+'/'+self.newMovie.get("tmdbId")+'?api_key=773a2a626be46f73173ee702587528c5',        
         dataType: 'jsonp',
         success: function(jsonData) {
-          if(!jQuery.isEmptyObject(jsonData.movie_results)) {
-            resultsObj = jsonData.movie_results;
-          } else if(!jQuery.isEmptyObject(jsonData.tv_results)) {
-            resultsObj = jsonData.tv_results;
-          }
+          console.log("getBasicMovieData jsonData",jsonData)
+          resultsObj = jsonData;
 
-          imagePath = "http://image.tmdb.org/t/p/w185/"+resultsObj[0].poster_path;
-          self.newMovie.set("plot", resultsObj[0].overview);
-          self.newMovie.set("tmdbId",resultsObj[0].id);
-          // self.newMovie.set("actors", resultsObj.Actors);
+          imagePath = "http://image.tmdb.org/t/p/w185/"+resultsObj.poster_path;
+          self.newMovie.set("plot", resultsObj.overview);
+          if(self.newMovie.get("type") == "movie") {
+            self.newMovie.set("imdbId",resultsObj.imdb_id);
+          }
+          
+          
+          // Test image path to make sure it exists:
           $.get(imagePath)
               .done(function() { 
                   // image exists.
                   console.log("image exists!");
                   self.newMovie.set("posterUrl", imagePath);
-                  self.getOtherMovieData();
+                  if(self.newMovie.get("type") == "movie") {
+                    self.getTrailerData();
+                  } else {
+                    self.getImdbId();
+                  }
+                  
               }).fail(function() { 
                   // Image doesn't exist - do something else.
                   self.newMovie.set("posterUrl", "images/missing_poster.jpg");
-                  self.getOtherMovieData();
+                  self.getTrailerData();
+                  if(self.newMovie.get("type") == "movie") {
+                    self.getTrailerData();
+                  } else {
+                    self.getImdbId();
+                  }
               });
           
         },
         error: function(error) {
-          console.log("Error with image")
+          console.log("Error with getBasicMovieData ajax call")
           console.log(error)
         } 
 
       });
     },
-    getOtherMovieData: function() {
+    getImdbId: function() {
+      var self = this;
+      // THis is only for TV for some reason. 
+      // The tmdb api provides IMDB ids for movies but needs a seperate call for tvs
+      $.ajax({
+        type: 'GET',
+        async: false, 
+        url: 'http://api.themoviedb.org/3/tv/'+self.newMovie.get("tmdbId")+'/external_ids?api_key=773a2a626be46f73173ee702587528c5',        
+        dataType: 'jsonp',
+        success: function(jsonData) {
+          console.log("getImdbId jsonData",jsonData)
+          resultsObj = jsonData;
+
+          self.newMovie.set("imdbId",resultsObj.imdb_id);
+          self.getTrailerData();
+          
+        },
+        error: function(error) {
+          console.log("Error with getBasicMovieData ajax call")
+          console.log(error)
+        }
+      }); 
+    },
+    getTrailerData: function() {
       var self = this;  
       var resultsObj = []; 
       var movieOrTv = "";
@@ -792,8 +829,9 @@ $(function() {
         url: 'http://api.themoviedb.org/3/'+movieOrTv+'/'+self.newMovie.get("tmdbId")+'/videos?api_key=773a2a626be46f73173ee702587528c5',
         dataType: 'jsonp',
         success: function(jsonData) {
+          console.log("getTrailerData jsonData:",jsonData);
           resultsObj = jsonData.results;
-          if(resultsObj[0].site == "YouTube" && resultsObj[0].type == "Trailer") {
+          if(resultsObj.length > 0 && resultsObj[0].site == "YouTube" && resultsObj[0].type == "Trailer") {
             self.newMovie.set("youTubeId", resultsObj[0].key);
           }
         },
@@ -805,6 +843,10 @@ $(function() {
       });      
       self.addMovieToList();
     },
+    getCastData: function() {
+      var self = this;
+
+    },
     movieClick: function(e) {
       // Clear out autocomplete list & input box
       $("#autocomplete-list").hide();
@@ -813,7 +855,7 @@ $(function() {
       this.newMovie.set("title", $(e.currentTarget).attr("title") );
       this.newMovie.set("type", $(e.currentTarget).attr("type"));
       this.newMovie.set("date", $(e.currentTarget).attr("date"));
-      this.newMovie.set("imdbId", $(e.currentTarget).attr("imdbId"));
+      this.newMovie.set("tmdbId", +$(e.currentTarget).attr("tmdbId"));
 
       this.showQuestionPart2();
     },
@@ -829,20 +871,20 @@ $(function() {
       
       $("#question-part-3").hide();
       // this.addMovieToList();
-      this.getPoster();
+      this.getBasicMovieData();
 
     },
     seenItAnswerClicked: function(e) {
       console.log("seenItAnswerClicked");
       var answerId = e.currentTarget.id;
+      $("#question-part-2").hide();
       if(answerId == 'seen-it') {
-        $("#question-part-2").hide();
         $("#question-part-3").show();
       } else if(answerId == 'not-seen-it') {
         //
         $.modal.close();
         this.currMovieToQueue = true;
-        this.getPoster();
+        this.getBasicMovieData();
         console.log("add to queue");
       }
 
@@ -870,36 +912,59 @@ $(function() {
         $("#autocomplete-list").show();
         $("#autocomplete-list").html('Searching ...');
 
-        var dataObj = {
-          s : $("#new-movie").val(),
-          r: 'JSON'
-        };
-        
+        var searchQuery = $("#new-movie").val();
+        // http://api.themoviedb.org/3/search/movie?api_key=773a2a626be46f73173ee702587528c5&query=spy
         $.ajax({
           type: 'GET',
-          data: dataObj,
-          url: 'http://www.omdbapi.com/',
+          url: 'http://api.themoviedb.org/3/search/multi?api_key=773a2a626be46f73173ee702587528c5&query='+searchQuery,
           dataType: 'jsonp',
           success: function(jsonData)
           {
             $("#autocomplete-list").html('');
-            var tvAndMovieList = jsonData.Search;
+            var tvAndMovieList = jsonData.results;
             if(tvAndMovieList) {
-              console.log("tvAndMovieList",tvAndMovieList)
               for (var i = 0; i < tvAndMovieList.length; i++) {
                 if(tvAndMovieList.length > i) {
                   var currLi = $("<li/>");
                   // $("#autocomplete-list").append("<img src='"+tvAndMovieList.movies[i].posters.profile+"' />");
-                  currLi.append("<a class='title' href='#'>"+tvAndMovieList[i].Title+"</a>");
+                  
+                  var media_type = tvAndMovieList[i].media_type;
+                  var title = "";
+                  var release_year = "";
+
+                  if(media_type == "tv") {
+                    media_type = "series";
+                    title = tvAndMovieList[i].name;
+                    if(tvAndMovieList[i].first_air_date != null) {
+                      release_year = tvAndMovieList[i].first_air_date.split("-")[0];
+                    } else {
+                      release_year = "";
+                    }
+                    
+                  } else {
+                    media_type = "movie";
+                    title = tvAndMovieList[i].title;
+                    if(tvAndMovieList[i].release_date != null) {
+                      release_year = tvAndMovieList[i].release_date.split("-")[0];
+                    } else {
+                      release_year = "";
+                    }
+                    
+                  }
+
+                  currLi.append("<a class='title' href='#'>"+title+"</a>");
+                  
                   var metadata = $("<div class='metadata' />");
                   currLi.append(metadata);
-                  metadata.append("<div class='year'>"+tvAndMovieList[i].Year+"</div>");
-                  metadata.append("<div class='type'>"+tvAndMovieList[i].Type+"</div>");
+                  
+                  metadata.append("<div class='year'>"+release_year+"</div>");
+                  metadata.append("<div class='type'>"+media_type+"</div>");
 
-                  currLi.attr("title",tvAndMovieList[i].Title);
-                  currLi.attr("date",tvAndMovieList[i].Year);
-                  currLi.attr("type",tvAndMovieList[i].Type);
-                  currLi.attr("imdbId",tvAndMovieList[i].imdbID);
+                  currLi.attr("title",title);
+                  currLi.attr("date",release_year);
+                  currLi.attr("type",media_type);
+                  currLi.attr("tmdbId",tvAndMovieList[i].id);
+                  // currLi.attr("imdbId",tvAndMovieList[i].imdbID);
                                   
                   $("#autocomplete-list").append(currLi);
                 }
