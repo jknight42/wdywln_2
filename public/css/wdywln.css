@@ -182,7 +182,7 @@ input#new-movie {
     overflow: scroll;
     padding-bottom: 20px;
 }
-#autocomplete-list:before {
+#autocomplete-list.long:before {
     content:'';
     width:100%;
     height:50px;    

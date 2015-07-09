@@ -314,6 +314,12 @@ $(function() {
     },
     closeModal: function() {
       $("#trailer-box iframe").attr("src","about:blank");
+
+      console.log("closeModal")
+      $("input#new-movie").val("");
+      $("#autocomplete-list").html("");
+      $("#autocomplete-list").removeClass("long");
+
     },
     changeMainView: function(e) {
       var animSpeed = 200;
@@ -607,7 +613,7 @@ $(function() {
   var AddMovieView = Parse.View.extend({
 
     events: {
-      "input input#new-movie":  "inputKeyPress",
+      "keyup input#new-movie":  "inputKeyPress",
       "click .seen-it-answer": "seenItAnswerClicked",
       "click .like-answer": "likeAnswerClicked",
       "click #autocomplete-list li": "movieClick"
@@ -895,7 +901,13 @@ $(function() {
       
     },
     inputKeyPress: function() {
-      $("#autocomplete-list").html('Waiting ...');
+      console.log("inputKeyPress");
+      if($("#new-movie").val().length > 0) {
+        $("#autocomplete-list").html('Waiting ...');
+
+      }
+      
+      $("#autocomplete-list").removeClass("long");
       if (this.keypressTimer) {
         clearTimeout(this.keypressTimer);
       }
@@ -904,6 +916,7 @@ $(function() {
 
     },
     autoFillMovieNames: function(e) {
+      console.log("autoFillMovieNames");
       var self = this;
 
       this.newMovie = new Movie();
@@ -911,6 +924,7 @@ $(function() {
       if($("#new-movie").val().length > 0) {
         $("#autocomplete-list").show();
         $("#autocomplete-list").html('Searching ...');
+        $("#autocomplete-list").removeClass("long");
 
         var searchQuery = $("#new-movie").val();
         // http://api.themoviedb.org/3/search/movie?api_key=773a2a626be46f73173ee702587528c5&query=spy
@@ -922,7 +936,16 @@ $(function() {
           {
             $("#autocomplete-list").html('');
             var tvAndMovieList = jsonData.results;
-            if(tvAndMovieList) {
+            console.log("tvAndMovieList",jsonData);
+            if(tvAndMovieList.length > 0) {
+
+              // add gradient to bottom of long lists to indicate there is more:
+              if(tvAndMovieList.length > 5) {
+                $("#autocomplete-list").addClass("long");
+              } else {
+                $("#autocomplete-list").removeClass("long");  
+              }
+
               for (var i = 0; i < tvAndMovieList.length; i++) {
                 if(tvAndMovieList.length > i) {
                   var currLi = $("<li/>");
@@ -978,6 +1001,9 @@ $(function() {
             Parse.Analytics.track('error', { area: "autocomplete", searchString: dataObj.s, user: Parse.User.current().get("firstName")+Parse.User.current().get("lastName") });
           }
         });
+      } else {
+        // input has 0 characters
+        $("#autocomplete-list").html("");
       }
     },
 
