@@ -107,6 +107,11 @@ $(function() {
 
   });
 
+  var ActivityList = Parse.Collection.extend({
+
+    model: Activity,
+  })
+
 
 
 /***
@@ -326,6 +331,7 @@ $(function() {
       this.$el.html(_.template($("#main-movies-template").html()));
       
       this.getAllMovies();
+      this.getAllActivities();
 
     },
     closeModal: function() {
@@ -437,6 +443,27 @@ $(function() {
       }
       state.on("change", this.filter, this);
     },
+    getAllActivities: function() {
+      var self = this;
+
+      // Create our collection of Movies
+      this.yourActivites = new ActivityList;
+
+      // Setup the query for the collection to look for Movies from the current user
+      this.yourActivites.query = new Parse.Query(Movie);
+      // this.yourMovies.query.equalTo("user", Parse.User.current());
+      this.yourActivites.query.containedIn("facebookID", this.yourFriendsIds);
+      this.yourActivites.query.descending("dateTime");
+        
+      this.yourActivites.bind('add',     this.activitiesAddOne);
+      this.yourActivites.bind('reset',   this.activitiesAddAll);
+      this.yourActivites.bind('all',     this.activitiesRender);
+
+      // Fetch all the movie items for this user
+      this.yourActivites.fetch();
+
+      state.on("change", this.filter, this);
+    },
     createYourQueuedMovies: function() {
       
     },
@@ -533,6 +560,20 @@ $(function() {
     queueAddAll: function(collection, filter) {
       console.log("queueAddAll",collection)
       this.$("#your-queued-movies-list").html("");
+      this.yourActivites.each(this.queueAddOne);
+    },
+
+    // Add a single movie item to the list by creating a view for it, and
+    // appending its element to the `<ul>`.
+    activitiesAddOne: function(activity) {
+      var view = new Activity({model: activity});
+      this.$("#activities-list").append(view.render().el);
+    },
+
+    // Add all items in the collection at once.
+    activitiesAddAll: function(collection, filter) {
+      console.log("activities",collection)
+      this.$("#activities-list").html("");
       this.yourQueuedMovies.each(this.queueAddOne);
     },
     retroFitMovies: function() {
@@ -1042,7 +1083,26 @@ $(function() {
 
   });
 
+var ActivityView = Parse.View.extend({
 
+    //... is a list tag.
+    tagName:  "li",
+
+    // Cache the template function for a single item.
+    template: _.template($('#activity-template').html()),
+
+    // The DOM events specific to an item.
+    events: {
+      
+    },
+
+    initialize: function() {
+      var self = this;
+      _.bindAll(this, 'render',  'remove');
+
+    }
+
+  });
 /***
  *    ##        #######   ######   #### ##    ##    ##     ## #### ######## ##      ## 
  *    ##       ##     ## ##    ##   ##  ###   ##    ##     ##  ##  ##       ##  ##  ## 
