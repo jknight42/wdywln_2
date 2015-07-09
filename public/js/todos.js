@@ -7,13 +7,13 @@ $(function() {
                    "BTfNR1vMfztxszEuQJNnthQAFRDLxPyy28O3FPjO");
 
 /***
- *    ##     ##  #######  ##     ## #### ########    ##     ## ########  ##       
- *    ###   ### ##     ## ##     ##  ##  ##          ###   ### ##     ## ##       
- *    #### #### ##     ## ##     ##  ##  ##          #### #### ##     ## ##       
- *    ## ### ## ##     ## ##     ##  ##  ######      ## ### ## ##     ## ##       
- *    ##     ## ##     ##  ##   ##   ##  ##          ##     ## ##     ## ##       
- *    ##     ## ##     ##   ## ##    ##  ##          ##     ## ##     ## ##       
- *    ##     ##  #######     ###    #### ########    ##     ## ########  ######## 
+ *    ##     ##  #######  ########  ######## ##        ######  
+ *    ###   ### ##     ## ##     ## ##       ##       ##    ## 
+ *    #### #### ##     ## ##     ## ##       ##       ##       
+ *    ## ### ## ##     ## ##     ## ######   ##        ######  
+ *    ##     ## ##     ## ##     ## ##       ##             ## 
+ *    ##     ## ##     ## ##     ## ##       ##       ##    ## 
+ *    ##     ##  #######  ########  ######## ########  ######  
  */
 
   // Our basic Movie model.
@@ -56,6 +56,15 @@ $(function() {
     },
   })
 
+  var Activity = Parse.Object.extend("Activity", {
+    defaults: {
+
+    },
+    initialize: function() {
+
+    },
+  });
+
 /***
  *    ##     ##  #######  ##     ## #### ########    ##       ####  ######  ######## 
  *    ###   ### ##     ## ##     ##  ##  ##          ##        ##  ##    ##    ##    
@@ -63,7 +72,7 @@ $(function() {
  *    ## ### ## ##     ## ##     ##  ##  ######      ##        ##   ######     ##    
  *    ##     ## ##     ##  ##   ##   ##  ##          ##        ##        ##    ##    
  *    ##     ## ##     ##   ## ##    ##  ##          ##        ##  ##    ##    ##    
- *    ##     ##  #######     ###    #### ########    ######## ####  ######     ##    
+ *    ##     ##  #######     ###    #### ########    ######## ####  ######     ##   
  */
 
   var YourMovieList = Parse.Collection.extend({
@@ -689,29 +698,45 @@ $(function() {
       });
     },
     saveMovie: function() {
+      var self = this;
       console.log("saveMovie()");
       var publicACL = new Parse.ACL();
       publicACL.setPublicReadAccess(true);
       publicACL.setPublicWriteAccess(true);
 
+      var newActivity = new Activity();
+
       if(this.currMovieToQueue) {
         var newQueueItemObj = { id: this.newMovie.get("imdbId"), tags: [] };
         console.log("newQueueItemObj",newQueueItemObj);
         Parse.User.current().addUnique("queue",newQueueItemObj);
+        newActivity.set("action","queued");
       } else {
         if(this.currMovieIsLiked) {
           this.movieToBeSaved.addUnique("likedBy",Parse.User.current().escape("facebookID"));
+          newActivity.set("action","liked");
         } else {
           this.movieToBeSaved.addUnique("notLikedBy",Parse.User.current().escape("facebookID"));
+          newActivity.set("action","disliked");
         }
       }
-      
+      console.log("self.movieToBeSaved",self.movieToBeSaved)
       this.movieToBeSaved.save({
         user: Parse.User.current(),
         ACL:     publicACL,
       }, {
         success: function() {
           // The object was saved successfully.
+
+          // add this to the activity log:
+          
+          newActivity.set("imdbId", self.movieToBeSaved.get("imdbId"));
+          newActivity.set("tmdbId", self.movieToBeSaved.get("tmdbId"));
+          newActivity.set("facebookID", Parse.User.current().escape("facebookID"));
+          newActivity.set("dateTime", new Date());
+
+          newActivity.save();
+
           theMainView.refreshMovies();
         },
         error: function(error) {
