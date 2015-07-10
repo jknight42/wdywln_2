@@ -655,6 +655,7 @@ $(function() {
     },
     showAddMovie: function() {
        $('.add-movie-container').modal();
+       $('.add-movie-container #new-movie').focus();
     },
     addOne: function(movie) {
       var view = new MovieView({model: movie});
