@@ -122,6 +122,28 @@ a {
     overflow: hidden;
     box-shadow: 1px 1px 2px 1px rgba(0, 0, 0, 0.4);
 }
+.status-message {
+    position: absolute;
+    bottom: 10px;
+    background: rgba(255,255,255,0.8);
+    font-size: 12px;
+    padding: 2px 0;
+    width: 0;
+    text-align: center;
+    color: #333;
+    text-transform: uppercase;
+    font-weight: 500;
+    border-top: 1px solid #AAA;
+    border-bottom: 1px solid #AAA;
+    display: none;
+    width: 160px;
+    
+}
+.status-message-reveal {
+    transition: width .5s ease, background-color .5s ease;
+    width: 160px;
+}
+
 .poster-container img {
     border: 1px solid #eee;
     width: 160px;

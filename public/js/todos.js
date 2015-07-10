@@ -209,6 +209,7 @@ $(function() {
       // Fade out like button as a loading indicator: 
       // $(self.el).find(".like-btn").animate({"opacity":.25},500);
 
+
       if( $.inArray(Parse.User.current().escape("facebookID"), this.model.attributes.likedBy) > -1 ) {
         // user already likes this movie, change to unlike. 
         this.model.remove("likedBy", Parse.User.current().escape("facebookID"));
@@ -226,7 +227,8 @@ $(function() {
               // The object was refreshed successfully.
               self.getLikedByFriends();
               self.render();
-              $(self.el).find(".like-btn").animate({"opacity":1},1000);
+              $(self.el).find(".status-message").html("Liked");
+              $(self.el).find(".status-message").fadeIn(500).delay(500).fadeOut(500);
             },
             error: function(myObject, error) {
               // The object was not refreshed successfully.
@@ -251,20 +253,25 @@ $(function() {
       var queueItemObject = { "id": this.model.attributes.imdbId, "tags": [] };
       var currUser = Parse.User.current();
 
-      currUser.addUnique("queue",queueItemObject)
+      currUser.addUnique("queue",queueItemObject);
+      $(self.el).find(".status-message").html("Added to queue");
+      $(self.el).find(".status-message").fadeIn(500).delay(500).fadeOut(500, function() {
+        currUser.save(null, {
+          success: function(response) {
+            // Execute any logic that should take place after the object is saved.
+            console.log('User data saved: ',response);
+            this.theMainView.refreshMovies();
+          },
+          error: function(response, error) {
+            // Execute any logic that should take place if the save fails.
+            // error is a Parse.Error with an error code and message.
+            console.log('Failed to create save user data, with error code: ' + error.message);
+          }
+        });
 
-      currUser.save(null, {
-        success: function(response) {
-          // Execute any logic that should take place after the object is saved.
-          console.log('User data saved: ',response);
-          this.theMainView.refreshMovies();
-        },
-        error: function(response, error) {
-          // Execute any logic that should take place if the save fails.
-          // error is a Parse.Error with an error code and message.
-          console.log('Failed to create save user data, with error code: ' + error.message);
-        }
       });
+
+      
 
     },
     render: function() {
