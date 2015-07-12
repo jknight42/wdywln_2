@@ -72,7 +72,7 @@ nav li.nav-item-current-li:after  {
 /*    width: 30%;
     float: left;*/
 }
-#queue-movies-list-container .queue-btn-container {
+#queue-movies-list-container, #your-movies-list-container {
     display: none;  
 }
 
