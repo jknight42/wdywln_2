@@ -146,10 +146,10 @@
         </header>
         <nav>
           <ul>
-            <li class="nav-item-current-li"><a href="javascript:void(0);" id="nav-your-friends-like" class="nav-item-current">Latest Activity</a></li>
-            <li><a href="javascript:void(0);" id="nav-your-friends-like">Your Friends Like</a></li>
-            <li><a href="javascript:void(0);" id="nav-you-like">You Like</a></li>
-            <li><a href="javascript:void(0);" id="nav-your-queue">Your Queue</a></li>
+            <li class="nav-item-current-li"><a href="javascript:void(0);" id="nav-activity" class="nav-item-current">Latest Activity</a></li>
+            <li><a href="javascript:void(0);" id="nav-friends-movies">Your Friends Like</a></li>
+            <li><a href="javascript:void(0);" id="nav-your-movies">You Like</a></li>
+            <li><a href="javascript:void(0);" id="nav-queue-movies">Your Queue</a></li>
           </ul>
         </nav>
         <div id="friends-movies-list-container">
@@ -171,7 +171,6 @@
         </div>
 
         <div id="activity-list-container">
-          Activity List
           <ul id="activity-list">
             . . . 
           </ul> 
@@ -288,10 +287,17 @@
 
    <script type="text/template" id="activity-template">
       <div class="view">
-        <%= _.escape(createdAt) %>
-        <%= _.escape(facebookID) %>
-        <%= _.escape(imdbId) %>
-        <%= _.escape(action) %>
+        <div class="poster-container">
+           <img src="<%= _.escape(this.moviePosterUrl) %>" />
+        </div>
+        <div class="text-container">
+          <img src="<%= _.escape(this.profileImage) %>" class="profile-image" />
+          <div class="action-phrase"><%= _.escape(this.personName) %> <%= _.escape(action) %>
+            <div class="movie-title"><%= _.escape(this.movieTitle) %></div>
+            <div class="date"><%= _.escape(this.readableDate) %></div>
+          </div> 
+          
+        </div>
       </div>
 
    </script>

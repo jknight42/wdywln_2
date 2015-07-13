@@ -318,7 +318,7 @@ $(function() {
 
     initialize: function() {
       var self = this;
-      this.mainNavIds = ["nav-activity","nav-your-friends-like","nav-you-like","nav-your-queue"]
+      this.mainNavIds = ["activity","friends-movies","your-movies","queue-movies"]
 
       var yourFriendsIds = [];
 
@@ -350,8 +350,12 @@ $(function() {
       var animSpeed = 200;
       
       this.hideAllMainViews(animSpeed);
+
+      // Update selected nav item with "on" state:
       $("#"+e.currentTarget.id).addClass("nav-item-current");
       $("#"+e.currentTarget.id).parent("li").addClass("nav-item-current-li");
+
+      // Turn off all other nav items:
       for (var i = 0; i < this.mainNavIds.length; i++) {
         if(this.mainNavIds[i] !== e.currentTarget.id) {
           $("#"+this.mainNavIds[i]).delay(animSpeed).fadeIn(animSpeed);
@@ -359,22 +363,18 @@ $(function() {
       };
 
       var contentBlock = e.currentTarget.id.replace("nav-","");
-      $("#"+contentBlock+"-container").delay(animSpeed).fadeIn(animSpeed);
+      // show the selected content block:
+      $("#"+contentBlock+"-list-container").delay(animSpeed).fadeIn(animSpeed);
 
     },
     hideAllMainViews: function(speed) {
-      
-      $("#friends-movies-list-container").fadeOut(speed);
-      $("#your-movies-list-container").fadeOut(speed);
-      $("#queue-movies-list-container").fadeOut(speed);
-
-      $("#nav-your-friends-like").removeClass("nav-item-current");
-      $("#nav-you-like").removeClass("nav-item-current");
-      $("#nav-your-queue").removeClass("nav-item-current");
-
-      $("#nav-your-friends-like").parent("li").removeClass("nav-item-current-li");
-      $("#nav-you-like").parent("li").removeClass("nav-item-current-li");
-      $("#nav-your-queue").parent("li").removeClass("nav-item-current-li");
+      console.log("hideAllMainViews",this.mainNavIds)
+      for (var i = 0; i < this.mainNavIds.length; i++) {
+        console.log("the thing","#"+this.mainNavIds[i]+"-container")
+        $("#"+this.mainNavIds[i]+"-list-container").fadeOut(speed);
+        $("#nav-"+this.mainNavIds[i]).removeClass("nav-item-current");
+        $("#nav-"+this.mainNavIds[i]).parent("li").removeClass("nav-item-current-li");
+      };
 
     },
     getAllMovies: function() {
@@ -1095,11 +1095,62 @@ var ActivityView = Parse.View.extend({
     },
 
     initialize: function() {
+      console.log("ActivityView init")
       var self = this;
       _.bindAll(this, 'render');
 
+      this.personName = "";
+      this.profileImage = "";
+      this.movieTitle = "";
+      this.moviePosterUrl = "";
+      this.readableDate = "";
+
+      this.readableDate = this.model.attributes.dateTime.toDateString();
+
+      this.getUserData();
+
+    },
+    getUserData: function() {
+      var self = this;
+
+      var query = new Parse.Query(User);
+      query.equalTo("facebookID", this.model.attributes.facebookID);
+      query.find({
+        success: function(userRecord) {
+          self.personName = userRecord[0].attributes.firstName+" "+userRecord[0].attributes.lastName;
+          self.profileImage = userRecord[0].attributes.profileImage;
+         
+          self.getMovieData();
+          
+        },
+        error: function(error) {
+          console.log("Error checking for movie in table:");
+          console.log(error);
+        }
+      });
+    },
+    getMovieData: function () {
+      var self = this;
+
+      var query = new Parse.Query(Movie);
+      query.equalTo("imdbId", this.model.attributes.imdbId);
+      query.find({
+        success: function(movieRecord) {
+          self.moviePosterUrl = movieRecord[0].attributes.posterUrl;
+          self.movieTitle = movieRecord[0].attributes.title;
+
+          // Re-render after getting data:
+          self.render();
+          
+        },
+        error: function(error) {
+          console.log("Error getMovieData:");
+          console.log(error);
+        }
+      });
     },
     render: function() {
+      console.log("ActivityView render")
       $(this.el).html(this.template(this.model.toJSON()));
       // $(this.el).addClass("movie-item");
       // this.input = this.$('.edit');

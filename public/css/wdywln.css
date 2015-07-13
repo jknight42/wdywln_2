@@ -72,7 +72,9 @@ nav li.nav-item-current-li:after  {
 /*    width: 30%;
     float: left;*/
 }
-#queue-movies-list-container, #your-movies-list-container {
+#queue-movies-list-container, 
+#your-movies-list-container, 
+#friends-movies-list-container {
     display: none;  
 }
 
@@ -311,3 +313,58 @@ input#new-movie {
     display: none;
     width: 560px;
 }
+#activity-list {
+    border-left: 1px solid rgba(255, 255, 255, 0.5);
+    margin-left: 35px;
+}
+#activity-list ul,
+#activity-list li {
+    list-style: none;
+}
+#activity-list li {
+    margin-bottom: 30px;
+    margin-left: -35px;
+}
+#activity-list .poster-container {
+    margin-right: 10px;
+}
+
+#activity-list .poster-container,
+#activity-list .text-container {
+    display: inline-block;
+    vertical-align: top;
+}
+#activity-list .poster-container img {
+    width: 70px;
+    height: auto;
+}
+#activity-list .poster-container,
+#activity-list .poster-container img {
+    height: 104px;
+}
+#activity-list .profile-image {
+    width: 40px;
+    border-radius: 20px;
+    vertical-align: top;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+#activity-list .action-phrase {
+    display: inline-block;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+#activity-list .movie-title {
+    display: block;
+    font-size: 20px;
+    border: none;
+    color: #fff;
+    margin-bottom: 0px;
+}
+#activity-list .date {
+    font-size: 11px;
+    color: #DDD;
+    font-style: italic;
+}
+
+
+
