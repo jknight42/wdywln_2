@@ -318,6 +318,7 @@ $(function() {
 
     initialize: function() {
       var self = this;
+      this.mainNavIds = ["nav-activity","nav-your-friends-like","nav-you-like","nav-your-queue"]
 
       var yourFriendsIds = [];
 
@@ -351,26 +352,18 @@ $(function() {
       this.hideAllMainViews(animSpeed);
       $("#"+e.currentTarget.id).addClass("nav-item-current");
       $("#"+e.currentTarget.id).parent("li").addClass("nav-item-current-li");
-      switch (e.currentTarget.id)
-      {
-        case "nav-your-friends-like":
-          $("#friends-movies-list-container").delay(animSpeed).fadeIn(animSpeed);
-          break;
-        case "nav-you-like":
-          $("#your-movies-list-container").delay(animSpeed).fadeIn(animSpeed);
-          break;
-        case "nav-your-queue": 
-          $("#queue-movies-list-container").delay(animSpeed).fadeIn(animSpeed);
-          break;
+      for (var i = 0; i < this.mainNavIds.length; i++) {
+        if(this.mainNavIds[i] !== e.currentTarget.id) {
+          $("#"+this.mainNavIds[i]).delay(animSpeed).fadeIn(animSpeed);
+        }
+      };
 
-         default: 
-           console.log('This should never happen');
-      }
-
-
+      var contentBlock = e.currentTarget.id.replace("nav-","");
+      $("#"+contentBlock+"-container").delay(animSpeed).fadeIn(animSpeed);
 
     },
     hideAllMainViews: function(speed) {
+      
       $("#friends-movies-list-container").fadeOut(speed);
       $("#your-movies-list-container").fadeOut(speed);
       $("#queue-movies-list-container").fadeOut(speed);
@@ -390,6 +383,8 @@ $(function() {
       var yourQueueArr = Parse.User.current().get("queue");
       var yourQueueIdsArr = [];
       var self = this;
+
+      console.log("yourQueueArr",yourQueueArr)
 
       // Create our collection of Movies
       this.yourMovies = new YourMovieList;
@@ -429,7 +424,8 @@ $(function() {
         this.yourQueuedMovies = new YourMovieList;
 
         // Setup the query for the collection to look for Movies that the current user's friends liked
-        this.yourQueuedMovies.query = new Parse.Query(Activity);
+        this.yourQueuedMovies.query = new Parse.Query(Movie);
+        console.log("yourQueueIdsArr",yourQueueIdsArr);
         this.yourQueuedMovies.query.containedIn("imdbId", yourQueueIdsArr);
           
         this.yourQueuedMovies.bind('add',     this.queueAddOne);
@@ -445,19 +441,18 @@ $(function() {
       var self = this;
 
       // Create our collection of Activities
-      self.yourActivites = new ActivityList;
+      self.yourActivities = new ActivityList;
 
-      self.yourActivites.query = new Parse.Query(Activity);
-      console.log("self.yourFriendsIds: ",self.yourFriendsIds)
-      // self.yourActivites.query.containedIn("facebookID", self.yourFriendsIds);
-      // self.yourActivites.query.descending("dateTime");
+      self.yourActivities.query = new Parse.Query(Activity);
+      self.yourActivities.query.containedIn("facebookID", self.yourFriendsIds);
+      self.yourActivities.query.descending("dateTime");
         
-      self.yourActivites.bind('add',     self.activitiesAddOne);
-      self.yourActivites.bind('reset',   self.activitiesAddAll);
-      self.yourActivites.bind('all',     self.render);
+      self.yourActivities.bind('add',     self.activitiesAddOne);
+      self.yourActivities.bind('reset',   self.activitiesAddAll);
+      self.yourActivities.bind('all',     self.render);
 
       // Fetch all the movie items for this user
-      self.yourActivites.fetch();
+      self.yourActivities.fetch();
 
       state.on("change", self.filter, self);
     },
@@ -549,21 +544,19 @@ $(function() {
     // appending its element to the `<ul>`.
     queueAddOne: function(movie) {
       var view = new MovieView({model: movie});
-      console.log(" queueAddOne view",view)
       this.$("#your-queued-movies-list").append(view.render().el);
     },
 
     // Add all items in the collection at once.
     queueAddAll: function(collection, filter) {
       this.$("#your-queued-movies-list").html("");
-      this.yourActivites.each(this.queueAddOne);
+      this.yourQueuedMovies.each(this.queueAddOne);
     },
 
     // Add a single movie item to the list by creating a view for it, and
     // appending its element to the `<ul>`.
     activitiesAddOne: function(activity) {
       var view = new ActivityView({model: activity});
-      console.log(" activitiesAddOne activity",activity)
       this.$("#activity-list").append(view.render().el);
     },
 
@@ -571,7 +564,7 @@ $(function() {
     activitiesAddAll: function(collection, filter) {
       console.log("activitiesAddAll");
       this.$("#activity-list").html("");
-      this.yourQueuedMovies.each(this.activitiesAddOne);
+      this.yourActivities.each(this.activitiesAddOne);
     },
     retroFitMovies: function() {
       // a catch all function to fix movies already added to the database with different kinds of new shit. 

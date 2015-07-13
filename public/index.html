@@ -146,7 +146,8 @@
         </header>
         <nav>
           <ul>
-            <li class="nav-item-current-li"><a href="javascript:void(0);" id="nav-your-friends-like" class="nav-item-current">Your Friends Like</a></li>
+            <li class="nav-item-current-li"><a href="javascript:void(0);" id="nav-your-friends-like" class="nav-item-current">Latest Activity</a></li>
+            <li><a href="javascript:void(0);" id="nav-your-friends-like">Your Friends Like</a></li>
             <li><a href="javascript:void(0);" id="nav-you-like">You Like</a></li>
             <li><a href="javascript:void(0);" id="nav-your-queue">Your Queue</a></li>
           </ul>
@@ -287,11 +288,7 @@
 
    <script type="text/template" id="activity-template">
       <div class="view">
-        <% var theDate = new Date(dateTime);
-
-
-        %>
-        <%= _.escape(theDate.toLocaleString()) %>
+        <%= _.escape(createdAt) %>
         <%= _.escape(facebookID) %>
         <%= _.escape(imdbId) %>
         <%= _.escape(action) %>
