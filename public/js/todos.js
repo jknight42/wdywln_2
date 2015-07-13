@@ -319,6 +319,8 @@ $(function() {
     initialize: function() {
       var self = this;
 
+      var yourFriendsIds = [];
+
       _.bindAll(this, 'addOne', 'addAll', 'friendsAddOne', 'friendsAddAll', 'queueAddOne', 'queueAddAll', 'activitiesAddOne', 'activitiesAddAll', 'render','logOut','getAllMovies');
 
       // Hide intro text once they are logged in
@@ -384,7 +386,7 @@ $(function() {
     },
     getAllMovies: function() {
 
-      var yourFriendsIds = Parse.User.current().get("friendIDs");
+      this.yourFriendsIds = Parse.User.current().get("friendIDs");
       var yourQueueArr = Parse.User.current().get("queue");
       var yourQueueIdsArr = [];
       var self = this;
@@ -410,7 +412,7 @@ $(function() {
 
       // Setup the query for the collection to look for Movies that the current user's friends liked
       this.yourFriendsMovies.query = new Parse.Query(Movie);
-      this.yourFriendsMovies.query.containedIn("likedBy", yourFriendsIds);
+      this.yourFriendsMovies.query.containedIn("likedBy", this.yourFriendsIds);
       this.yourFriendsMovies.query.descending("createdAt");
         
       this.yourFriendsMovies.bind('add',     this.friendsAddOne);
@@ -427,7 +429,7 @@ $(function() {
         this.yourQueuedMovies = new YourMovieList;
 
         // Setup the query for the collection to look for Movies that the current user's friends liked
-        this.yourQueuedMovies.query = new Parse.Query(Movie);
+        this.yourQueuedMovies.query = new Parse.Query(Activity);
         this.yourQueuedMovies.query.containedIn("imdbId", yourQueueIdsArr);
           
         this.yourQueuedMovies.bind('add',     this.queueAddOne);
@@ -442,14 +444,13 @@ $(function() {
     getAllActivities: function() {
       var self = this;
 
-      // Create our collection of Movies
+      // Create our collection of Activities
       self.yourActivites = new ActivityList;
 
-      // Setup the query for the collection to look for Movies from the current user
-      self.yourActivites.query = new Parse.Query(Movie);
-      // this.yourMovies.query.equalTo("user", Parse.User.current());
-      self.yourActivites.query.containedIn("facebookID", self.yourFriendsIds);
-      self.yourActivites.query.descending("dateTime");
+      self.yourActivites.query = new Parse.Query(Activity);
+      console.log("self.yourFriendsIds: ",self.yourFriendsIds)
+      // self.yourActivites.query.containedIn("facebookID", self.yourFriendsIds);
+      // self.yourActivites.query.descending("dateTime");
         
       self.yourActivites.bind('add',     self.activitiesAddOne);
       self.yourActivites.bind('reset',   self.activitiesAddAll);
@@ -561,14 +562,15 @@ $(function() {
     // Add a single movie item to the list by creating a view for it, and
     // appending its element to the `<ul>`.
     activitiesAddOne: function(activity) {
-      var view = new Activity({model: activity});
-      console.log(" activitiesAddOne view",view)
-      this.$("#activities-list").append(view.render().el);
+      var view = new ActivityView({model: activity});
+      console.log(" activitiesAddOne activity",activity)
+      this.$("#activity-list").append(view.render().el);
     },
 
     // Add all items in the collection at once.
     activitiesAddAll: function(collection, filter) {
-      this.$("#activities-list").html("");
+      console.log("activitiesAddAll");
+      this.$("#activity-list").html("");
       this.yourQueuedMovies.each(this.activitiesAddOne);
     },
     retroFitMovies: function() {

@@ -287,6 +287,14 @@
 
    <script type="text/template" id="activity-template">
       <div class="view">
+        <% var theDate = new Date(dateTime);
+
+
+        %>
+        <%= _.escape(theDate.toLocaleString()) %>
+        <%= _.escape(facebookID) %>
+        <%= _.escape(imdbId) %>
+        <%= _.escape(action) %>
       </div>
 
    </script>
