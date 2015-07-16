@@ -340,7 +340,6 @@ $(function() {
     closeModal: function() {
       $("#trailer-box iframe").attr("src","about:blank");
 
-      console.log("closeModal")
       $("input#new-movie").val("");
       $("#autocomplete-list").html("");
       $("#autocomplete-list").removeClass("long");
@@ -384,7 +383,6 @@ $(function() {
       var yourQueueIdsArr = [];
       var self = this;
 
-      console.log("yourQueueArr",yourQueueArr)
 
       // Create our collection of Movies
       this.yourMovies = new YourMovieList;
@@ -425,7 +423,6 @@ $(function() {
 
         // Setup the query for the collection to look for Movies that the current user's friends liked
         this.yourQueuedMovies.query = new Parse.Query(Movie);
-        console.log("yourQueueIdsArr",yourQueueIdsArr);
         this.yourQueuedMovies.query.containedIn("imdbId", yourQueueIdsArr);
           
         this.yourQueuedMovies.bind('add',     this.queueAddOne);
@@ -446,12 +443,15 @@ $(function() {
       self.yourActivities.query = new Parse.Query(Activity);
       self.yourActivities.query.containedIn("facebookID", self.yourFriendsIds);
       self.yourActivities.query.descending("dateTime");
+      self.yourActivities.query.include("activityMovie");
+      self.yourActivities.query.include("activityUser");
+      // self.yourActivities.query.limit(1)
         
       self.yourActivities.bind('add',     self.activitiesAddOne);
       self.yourActivities.bind('reset',   self.activitiesAddAll);
       self.yourActivities.bind('all',     self.render);
 
-      // Fetch all the movie items for this user
+      // Fetch all the activity items for this user
       self.yourActivities.fetch();
 
       state.on("change", self.filter, self);
@@ -460,8 +460,8 @@ $(function() {
       
     },
     refreshMovies: function() {
-      var self = this;
       console.log("refreshMovies");
+      var self = this;
       // Fetch all the movie items for this user
       Parse.User.current().fetch({
         success: function(myObject) {
@@ -481,7 +481,6 @@ $(function() {
           self.yourQueuedMovies.fetch({
             success: function(myObject) {
               // The object was refreshed successfully.
-              console.log("yourQueuedMovies fetched success");
             },
             error: function(myObject, error) {
               // The object was not refreshed successfully.
@@ -556,13 +555,14 @@ $(function() {
     // Add a single movie item to the list by creating a view for it, and
     // appending its element to the `<ul>`.
     activitiesAddOne: function(activity) {
+      console.log("activitiesAddOne",activity);
       var view = new ActivityView({model: activity});
       this.$("#activity-list").append(view.render().el);
     },
 
     // Add all items in the collection at once.
     activitiesAddAll: function(collection, filter) {
-      console.log("activitiesAddAll");
+      console.log("activitiesAddAll",collection);
       this.$("#activity-list").html("");
       this.yourActivities.each(this.activitiesAddOne);
     },
@@ -716,14 +716,10 @@ $(function() {
       query.find({
         success: function(results) {
           if(results.length == 0) {
-            console.log("Movie does not exist: "+self.newMovie.get("imdbId"));
             // TODO: Move existing code to create new movie here and add current user's facebook Id to the like or not like column. 
-            console.log("self.newMovie",self.newMovie)
             self.movieToBeSaved = self.newMovie;
             self.saveMovie();
           } else {
-            console.log("MOVIE EXISTS!"+self.newMovie.get("imdbId"));
-            console.log(results)
             self.movieToBeSaved = results[0];
             
             self.saveMovie();
@@ -737,7 +733,6 @@ $(function() {
     },
     saveMovie: function() {
       var self = this;
-      console.log("saveMovie()");
       var publicACL = new Parse.ACL();
       publicACL.setPublicReadAccess(true);
       publicACL.setPublicWriteAccess(true);
@@ -746,7 +741,6 @@ $(function() {
 
       if(this.currMovieToQueue) {
         var newQueueItemObj = { id: this.newMovie.get("imdbId"), tags: [] };
-        console.log("newQueueItemObj",newQueueItemObj);
         Parse.User.current().addUnique("queue",newQueueItemObj);
         newActivity.set("action","queued");
       } else {
@@ -758,22 +752,30 @@ $(function() {
           newActivity.set("action","disliked");
         }
       }
-      console.log("self.movieToBeSaved",self.movieToBeSaved)
       this.movieToBeSaved.save({
         user: Parse.User.current(),
         ACL:     publicACL,
       }, {
-        success: function() {
+        success: function(savedMovie) {
           // The object was saved successfully.
 
           // add this to the activity log:
-          
-          newActivity.set("imdbId", self.movieToBeSaved.get("imdbId"));
-          newActivity.set("tmdbId", self.movieToBeSaved.get("tmdbId"));
-          newActivity.set("facebookID", Parse.User.current().escape("facebookID"));
+          console.log("savedMovie",savedMovie);
+          console.log("Parse.User.current()",Parse.User.current());
+
+          newActivity.set("activityMovie", savedMovie);
+          newActivity.set("activityUser", Parse.User.current());
+          newActivity.set("facebookID", Parse.User.current().get("facebookID"));
           newActivity.set("dateTime", new Date());
 
-          newActivity.save();
+          newActivity.save(null,{
+            success: function(result) {
+              console.log("newActivity save success",result);
+            },
+            error: function(result,error) {
+              console.log("newActivity save error",error);
+            }
+          });
 
           theMainView.refreshMovies();
         },
@@ -817,7 +819,6 @@ $(function() {
         url: 'http://api.themoviedb.org/3/'+movieOrTv+'/'+self.newMovie.get("tmdbId")+'?api_key=773a2a626be46f73173ee702587528c5',        
         dataType: 'jsonp',
         success: function(jsonData) {
-          console.log("getBasicMovieData jsonData",jsonData)
           resultsObj = jsonData;
 
           imagePath = "http://image.tmdb.org/t/p/w185/"+resultsObj.poster_path;
@@ -898,7 +899,6 @@ $(function() {
         url: 'http://api.themoviedb.org/3/'+movieOrTv+'/'+self.newMovie.get("tmdbId")+'/videos?api_key=773a2a626be46f73173ee702587528c5',
         dataType: 'jsonp',
         success: function(jsonData) {
-          console.log("getTrailerData jsonData:",jsonData);
           resultsObj = jsonData.results;
           if(resultsObj.length > 0 && resultsObj[0].site == "YouTube" && resultsObj[0].type == "Trailer") {
             self.newMovie.set("youTubeId", resultsObj[0].key);
@@ -944,7 +944,6 @@ $(function() {
 
     },
     seenItAnswerClicked: function(e) {
-      console.log("seenItAnswerClicked");
       var answerId = e.currentTarget.id;
       $("#question-part-2").hide();
       if(answerId == 'seen-it') {
@@ -954,7 +953,6 @@ $(function() {
         $.modal.close();
         this.currMovieToQueue = true;
         this.getBasicMovieData();
-        console.log("add to queue");
       }
 
     },
@@ -964,7 +962,6 @@ $(function() {
       
     },
     inputKeyPress: function() {
-      console.log("inputKeyPress");
       if($("#new-movie").val().length > 0) {
         $("#autocomplete-list").html('Waiting ...');
 
@@ -979,7 +976,6 @@ $(function() {
 
     },
     autoFillMovieNames: function(e) {
-      console.log("autoFillMovieNames");
       var self = this;
 
       this.newMovie = new Movie();
@@ -999,7 +995,6 @@ $(function() {
           {
             $("#autocomplete-list").html('');
             var tvAndMovieList = jsonData.results;
-            console.log("tvAndMovieList",jsonData);
             if(tvAndMovieList.length > 0) {
 
               // add gradient to bottom of long lists to indicate there is more:
@@ -1095,32 +1090,33 @@ var ActivityView = Parse.View.extend({
     },
 
     initialize: function() {
-      console.log("ActivityView init")
       var self = this;
       _.bindAll(this, 'render');
 
-      this.personName = "";
-      this.profileImage = "";
-      this.movieTitle = "";
-      this.moviePosterUrl = "";
-      this.readableDate = "";
-
+      this.personName = this.model.get("activityUser").get("firstName")+" "+this.model.get("activityUser").get("lastName");
+      this.profileImage = this.model.get("activityUser").get("profileImage");
+      this.movieTitle = this.model.get("activityMovie").get("title");
+      this.moviePosterUrl = this.model.get("activityMovie").get("posterUrl");
       this.readableDate = this.model.attributes.dateTime.toDateString();
+      this.reallyRender();
+      // this.getUserData();
 
-      this.getUserData();
 
     },
     getUserData: function() {
       var self = this;
-
+      console.log("getUserData");
       var query = new Parse.Query(User);
       query.equalTo("facebookID", this.model.attributes.facebookID);
+      query.limit(1);
+      query.select("firstName","lastName","profileImage");
       query.find({
         success: function(userRecord) {
           self.personName = userRecord[0].attributes.firstName+" "+userRecord[0].attributes.lastName;
           self.profileImage = userRecord[0].attributes.profileImage;
-         
-          self.getMovieData();
+          
+          self.reallyRender();
+          // self.getMovieData();
           
         },
         error: function(error) {
@@ -1134,13 +1130,15 @@ var ActivityView = Parse.View.extend({
 
       var query = new Parse.Query(Movie);
       query.equalTo("imdbId", this.model.attributes.imdbId);
+      query.limit(1);
+      query.select("posterUrl","title","imdbId");
       query.find({
         success: function(movieRecord) {
           self.moviePosterUrl = movieRecord[0].attributes.posterUrl;
           self.movieTitle = movieRecord[0].attributes.title;
 
-          // Re-render after getting data:
-          self.render();
+          // Render after getting data:
+          self.reallyRender();
           
         },
         error: function(error) {
@@ -1150,11 +1148,12 @@ var ActivityView = Parse.View.extend({
       });
     },
     render: function() {
-      console.log("ActivityView render")
-      $(this.el).html(this.template(this.model.toJSON()));
-      // $(this.el).addClass("movie-item");
-      // this.input = this.$('.edit');
+      // $(this.el).html(this.template(this.model.toJSON()));
       
+      return this;
+    },
+    reallyRender: function() {
+      $(this.el).html(this.template(this.model.toJSON()));
       return this;
     },
     // Remove the item, destroy the model.

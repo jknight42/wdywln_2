@@ -327,6 +327,7 @@ input#new-movie {
 }
 #activity-list .poster-container {
     margin-right: 10px;
+    background: #fff;
 }
 
 #activity-list .poster-container,
@@ -344,6 +345,7 @@ input#new-movie {
 }
 #activity-list .profile-image {
     width: 40px;
+    height: 40px;
     border-radius: 20px;
     vertical-align: top;
     border: 1px solid rgba(255, 255, 255, 0.5);

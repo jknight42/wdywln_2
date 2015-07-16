@@ -247,40 +247,6 @@
               </ul>
             </div>
 
-            <a class="btn watch" href="<%= _.escape(ctaUrl) %>" target="_blank">Watch now</a>
-            <div class="secondary-ctas">
-              
-              
-              <% if ( likedBy.indexOf(Parse.User.current().escape("facebookID") ) == -1 ) { %>
-                <a href="javascript:void(0);" class="like-btn">Like</a>
-              <% } %>
-
-              <% if ( likedBy.indexOf(Parse.User.current().escape("facebookID"))  == -1  && (typeof youTubeId !== 'undefined') ) { %>
-                |
-              <% } %>
-
-              <% if(typeof youTubeId !== 'undefined') { %>
-                 <a href="#video-iframe" class="trailer-btn">Trailer</a>
-              <% } %>
-
-              <% 
-                // This code is a bit heavy for the template, but I wasn't sure of a better way to do it. 
-                // We could clean this up a lot if we changed the queue to just an array instead of an object
-                // ... but then we couldn't have tags for each queued item and then types of queues (comedy queue, action queue, etc)
-                var queueObjArr = Parse.User.current().get("queue");
-                var queueIdsArr = [];
-                for (i = 0; i < queueObjArr.length; i++) {
-                    queueIdsArr[i] = queueObjArr[i].id; 
-                }
-
-                if ( queueIdsArr.indexOf(imdbId) == -1 ) { 
-              %>
-              <% if ( likedBy.indexOf(Parse.User.current().escape("facebookID"))  == -1  || (typeof youTubeId !== 'undefined') ) { %>
-                |
-              <% } %>
-              <a href="javascript:void(0);" class="queue-btn">Add to queue</a>
-              <% } %>
-            </div>
           </div>
       	</div>
     </script>
@@ -295,7 +261,7 @@
           <div class="action-phrase"><%= _.escape(this.personName) %> <%= _.escape(action) %>
             <div class="movie-title"><%= _.escape(this.movieTitle) %></div>
             <div class="date"><%= _.escape(this.readableDate) %></div>
-          </div> 
+            <div class="date"><%= _.escape(activityMovie.title) %></div>
           
         </div>
       </div>
