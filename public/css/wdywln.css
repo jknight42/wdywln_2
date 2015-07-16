@@ -309,6 +309,16 @@ input#new-movie {
     text-align: center;
     margin: 5px 0;
 }
+.secondary-ctas a {
+    padding: 0 6px 0 8px;
+    border-left: 1px solid #eee;
+    line-height: 1.3em;
+    vertical-align: middle;
+    display: inline-block;
+}
+.secondary-ctas a:first-child {
+    border-left: none;
+}
 #trailer-box {
     display: none;
     width: 560px;
