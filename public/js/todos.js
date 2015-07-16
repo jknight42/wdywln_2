@@ -437,15 +437,20 @@ $(function() {
     getAllActivities: function() {
       var self = this;
 
+      var youAndYourFriendsIds = self.yourFriendsIds;
+      console.log("self.yourFriendsIds",self.yourFriendsIds)
+      youAndYourFriendsIds.push(Parse.User.current().get("facebookID"));
+      console.log("youAndYourFriendsIds",youAndYourFriendsIds)
+
       // Create our collection of Activities
       self.yourActivities = new ActivityList;
 
       self.yourActivities.query = new Parse.Query(Activity);
-      self.yourActivities.query.containedIn("facebookID", self.yourFriendsIds);
+      self.yourActivities.query.containedIn("facebookID", youAndYourFriendsIds);
       self.yourActivities.query.descending("dateTime");
+      console.log("1");
       self.yourActivities.query.include("activityMovie");
       self.yourActivities.query.include("activityUser");
-      // self.yourActivities.query.limit(1)
         
       self.yourActivities.bind('add',     self.activitiesAddOne);
       self.yourActivities.bind('reset',   self.activitiesAddAll);
@@ -555,14 +560,12 @@ $(function() {
     // Add a single movie item to the list by creating a view for it, and
     // appending its element to the `<ul>`.
     activitiesAddOne: function(activity) {
-      console.log("activitiesAddOne",activity);
       var view = new ActivityView({model: activity});
       this.$("#activity-list").append(view.render().el);
     },
 
     // Add all items in the collection at once.
     activitiesAddAll: function(collection, filter) {
-      console.log("activitiesAddAll",collection);
       this.$("#activity-list").html("");
       this.yourActivities.each(this.activitiesAddOne);
     },
@@ -734,6 +737,7 @@ $(function() {
     saveMovie: function() {
       var self = this;
       var publicACL = new Parse.ACL();
+      var currentUser = Parse.User.current();
       publicACL.setPublicReadAccess(true);
       publicACL.setPublicWriteAccess(true);
 
@@ -762,7 +766,12 @@ $(function() {
           // add this to the activity log:
           console.log("savedMovie",savedMovie);
           console.log("Parse.User.current()",Parse.User.current());
+          console.log("Parse.User.current()",currentUser);
+          console.log("Parse.User.current()",currentUser.attributes);
+          console.log("Parse.User.current()",currentUser.get("firstName"));
+          console.log("Parse.User.current()",currentUser.attributes.facebookID);
 
+          console.log("2")
           newActivity.set("activityMovie", savedMovie);
           newActivity.set("activityUser", Parse.User.current());
           newActivity.set("facebookID", Parse.User.current().get("facebookID"));
@@ -1093,6 +1102,7 @@ var ActivityView = Parse.View.extend({
       var self = this;
       _.bindAll(this, 'render');
 
+      console.log("this.model",this.model)
       this.personName = this.model.get("activityUser").get("firstName")+" "+this.model.get("activityUser").get("lastName");
       this.profileImage = this.model.get("activityUser").get("profileImage");
       this.movieTitle = this.model.get("activityMovie").get("title");
@@ -1102,50 +1112,6 @@ var ActivityView = Parse.View.extend({
       // this.getUserData();
 
 
-    },
-    getUserData: function() {
-      var self = this;
-      console.log("getUserData");
-      var query = new Parse.Query(User);
-      query.equalTo("facebookID", this.model.attributes.facebookID);
-      query.limit(1);
-      query.select("firstName","lastName","profileImage");
-      query.find({
-        success: function(userRecord) {
-          self.personName = userRecord[0].attributes.firstName+" "+userRecord[0].attributes.lastName;
-          self.profileImage = userRecord[0].attributes.profileImage;
-          
-          self.reallyRender();
-          // self.getMovieData();
-          
-        },
-        error: function(error) {
-          console.log("Error checking for movie in table:");
-          console.log(error);
-        }
-      });
-    },
-    getMovieData: function () {
-      var self = this;
-
-      var query = new Parse.Query(Movie);
-      query.equalTo("imdbId", this.model.attributes.imdbId);
-      query.limit(1);
-      query.select("posterUrl","title","imdbId");
-      query.find({
-        success: function(movieRecord) {
-          self.moviePosterUrl = movieRecord[0].attributes.posterUrl;
-          self.movieTitle = movieRecord[0].attributes.title;
-
-          // Render after getting data:
-          self.reallyRender();
-          
-        },
-        error: function(error) {
-          console.log("Error getMovieData:");
-          console.log(error);
-        }
-      });
     },
     render: function() {
       // $(this.el).html(this.template(this.model.toJSON()));
