@@ -733,14 +733,13 @@ $(function() {
         user: Parse.User.current(),
         ACL:     publicACL,
       }, {
-        success: function() {
+        success: function(resultMovie) {
           // The object was saved successfully.
 
           // add this to the activity log:
-          
-          newActivity.set("imdbId", self.movieToBeSaved.get("imdbId"));
-          newActivity.set("tmdbId", self.movieToBeSaved.get("tmdbId"));
-          newActivity.set("facebookID", Parse.User.current().escape("facebookID"));
+          newActivity.set("activityMovie", resultMovie);
+          newActivity.set("activityUser", Parse.User.current());
+          newActivity.set("facebookID", Parse.User.current().get("facebookID"));
           newActivity.set("dateTime", new Date());
 
           newActivity.save();
