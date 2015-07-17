@@ -646,6 +646,7 @@ $(function() {
       console.log("creatingNewActivity",activityType,activityMovie);
       var newActivity = new Activity();
       console.log("-- Parse.User.current()",Parse.User.current())
+      console.log("-- Parse.User.current().attributes",Parse.User.current().attributes)
       newActivity.set("action",activityType);
       newActivity.set("activityMovie", activityMovie);
       newActivity.set("activityUser", Parse.User.current());
