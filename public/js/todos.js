@@ -5,7 +5,6 @@ $(function() {
   // Initialize Parse with your Parse application javascript keys
   Parse.initialize("MGKUEbafBIIy2bY4whbBKswCrbOsyyHJdqGMqhBi",
                    "BTfNR1vMfztxszEuQJNnthQAFRDLxPyy28O3FPjO");
-
 /***
  *    ##     ##  #######  ########  ######## ##        ######  
  *    ###   ### ##     ## ##     ## ##       ##       ##    ## 
@@ -225,15 +224,16 @@ $(function() {
       this.model.save({
         user: Parse.User.current()
       }, {
-        success: function(result) {
+        success: function(resultMovie) {
           // The object was saved successfully.
+          this.theMainView.createNewActivity("liked",resultMovie);
+          
           self.model.fetch({
             success: function(result) {
               // The object was refreshed successfully.
               self.getLikedByFriends();
               self.render();
-              $(self.el).find(".status-message").html("Liked");
-              $(self.el).find(".status-message").fadeIn(500).delay(500).fadeOut(500);
+              
             },
             error: function(myObject, error) {
               // The object was not refreshed successfully.
@@ -262,9 +262,10 @@ $(function() {
       $(self.el).find(".status-message").html("Added to queue");
       $(self.el).find(".status-message").fadeIn(500).delay(500).fadeOut(500, function() {
         currUser.save(null, {
-          success: function(response) {
+          success: function(responseMovie) {
             // Execute any logic that should take place after the object is saved.
-            console.log('User data saved: ',response);
+            console.log('User data saved: ',responseMovie);
+            this.theMainView.createNewActivity("queued",responseMovie);
             this.theMainView.refreshMovies();
           },
           error: function(response, error) {
@@ -367,9 +368,7 @@ $(function() {
 
     },
     hideAllMainViews: function(speed) {
-      console.log("hideAllMainViews",this.mainNavIds)
       for (var i = 0; i < this.mainNavIds.length; i++) {
-        console.log("the thing","#"+this.mainNavIds[i]+"-container")
         $("#"+this.mainNavIds[i]+"-list-container").fadeOut(speed);
         $("#nav-"+this.mainNavIds[i]).removeClass("nav-item-current");
         $("#nav-"+this.mainNavIds[i]).parent("li").removeClass("nav-item-current-li");
@@ -438,9 +437,7 @@ $(function() {
       var self = this;
 
       var youAndYourFriendsIds = self.yourFriendsIds;
-      console.log("self.yourFriendsIds",self.yourFriendsIds)
       youAndYourFriendsIds.push(Parse.User.current().get("facebookID"));
-      console.log("youAndYourFriendsIds",youAndYourFriendsIds)
 
       // Create our collection of Activities
       self.yourActivities = new ActivityList;
@@ -644,6 +641,28 @@ $(function() {
         
 
         });
+    },
+    createNewActivity: function(activityType, activityMovie) {
+      console.log("creatingNewActivity",activityType,activityMovie);
+      var newActivity = new Activity();
+      console.log("-- Parse.User.current()",Parse.User.current())
+      newActivity.set("action",activityType);
+      newActivity.set("activityMovie", activityMovie);
+      newActivity.set("activityUser", Parse.User.current());
+      newActivity.set("facebookID", Parse.User.current().get("facebookID"));
+      newActivity.set("dateTime", new Date());
+
+      newActivity.save(null,{
+        success: function(result) {
+          console.log("newActivity save success",result);
+        },
+        error: function(result,error) {
+          console.log("newActivity save error",error);
+        }
+      });
+
+      theMainView.refreshMovies();
+
     }
 
 
@@ -738,55 +757,33 @@ $(function() {
       var self = this;
       var publicACL = new Parse.ACL();
       var currentUser = Parse.User.current();
+      var activityType = "";
       publicACL.setPublicReadAccess(true);
       publicACL.setPublicWriteAccess(true);
-
-      var newActivity = new Activity();
 
       if(this.currMovieToQueue) {
         var newQueueItemObj = { id: this.newMovie.get("imdbId"), tags: [] };
         Parse.User.current().addUnique("queue",newQueueItemObj);
-        newActivity.set("action","queued");
+        activityType = "queued";
       } else {
         if(this.currMovieIsLiked) {
           this.movieToBeSaved.addUnique("likedBy",Parse.User.current().escape("facebookID"));
-          newActivity.set("action","liked");
+          activityType = "liked";
         } else {
           this.movieToBeSaved.addUnique("notLikedBy",Parse.User.current().escape("facebookID"));
-          newActivity.set("action","disliked");
+          activityType = "disliked";
         }
       }
+
       this.movieToBeSaved.save({
         user: Parse.User.current(),
         ACL:     publicACL,
       }, {
         success: function(savedMovie) {
           // The object was saved successfully.
-
+          console.log("savedMovie");
           // add this to the activity log:
-          console.log("savedMovie",savedMovie);
-          console.log("Parse.User.current()",Parse.User.current());
-          console.log("Parse.User.current()",currentUser);
-          console.log("Parse.User.current()",currentUser.attributes);
-          console.log("Parse.User.current()",currentUser.get("firstName"));
-          console.log("Parse.User.current()",currentUser.attributes.facebookID);
-
-          console.log("2")
-          newActivity.set("activityMovie", savedMovie);
-          newActivity.set("activityUser", Parse.User.current());
-          newActivity.set("facebookID", Parse.User.current().get("facebookID"));
-          newActivity.set("dateTime", new Date());
-
-          newActivity.save(null,{
-            success: function(result) {
-              console.log("newActivity save success",result);
-            },
-            error: function(result,error) {
-              console.log("newActivity save error",error);
-            }
-          });
-
-          theMainView.refreshMovies();
+          this.theMainView.createNewActivity(self.activityType,savedMovie);
         },
         error: function(error) {
           // The save failed.
@@ -1102,7 +1099,6 @@ var ActivityView = Parse.View.extend({
       var self = this;
       _.bindAll(this, 'render');
 
-      console.log("this.model",this.model)
       this.personName = this.model.get("activityUser").get("firstName")+" "+this.model.get("activityUser").get("lastName");
       this.profileImage = this.model.get("activityUser").get("profileImage");
       this.movieTitle = this.model.get("activityMovie").get("title");
