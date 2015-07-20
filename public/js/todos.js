@@ -491,6 +491,7 @@ $(function() {
             }
           });
           self.yourFriendsMovies.fetch();
+          self.yourActivities.fetch();
         },
         error: function(myObject, error) {
           // The object was not refreshed successfully.
