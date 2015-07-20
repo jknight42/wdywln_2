@@ -262,10 +262,10 @@ $(function() {
       $(self.el).find(".status-message").html("Added to queue");
       $(self.el).find(".status-message").fadeIn(500).delay(500).fadeOut(500, function() {
         currUser.save(null, {
-          success: function(responseMovie) {
+          success: function(responseUser) {
             // Execute any logic that should take place after the object is saved.
-            console.log('User data saved: ',responseMovie);
-            this.theMainView.createNewActivity("queued",responseMovie);
+            console.log('User data saved: ',responseUser);
+            this.theMainView.createNewActivity("queued",self.model);
             this.theMainView.refreshMovies();
           },
           error: function(response, error) {
@@ -782,7 +782,7 @@ $(function() {
       }, {
         success: function(savedMovie) {
           // The object was saved successfully.
-          console.log("savedMovie");
+          console.log("savedMovie",savedMovie);
           // add this to the activity log:
           this.theMainView.createNewActivity(self.activityType,savedMovie);
         },
