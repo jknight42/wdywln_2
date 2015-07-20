@@ -445,7 +445,6 @@ $(function() {
       self.yourActivities.query = new Parse.Query(Activity);
       self.yourActivities.query.containedIn("facebookID", youAndYourFriendsIds);
       self.yourActivities.query.descending("dateTime");
-      console.log("1");
       self.yourActivities.query.include("activityMovie");
       self.yourActivities.query.include("activityUser");
         
@@ -607,7 +606,6 @@ $(function() {
       } else if(theOneMovie.get("type") == "movie") {
         movieOrTv = "movie";
       }
-      console.log(theOneMovie.get("title"));
       $.ajax({
           type: 'GET',
           async: false, 
@@ -623,7 +621,6 @@ $(function() {
             }, {
               success: function(savedMovie) {
                 // The object was saved successfully.
-                console.log("Saved trailer");
               },
               error: function(savedMovie, error) {
                 // The save failed.
@@ -644,10 +641,7 @@ $(function() {
         });
     },
     createNewActivity: function(activityType, activityMovie) {
-      console.log("creatingNewActivity",activityType,activityMovie);
       var newActivity = new Activity();
-      console.log("-- Parse.User.current()",Parse.User.current())
-      console.log("-- Parse.User.current().attributes",Parse.User.current().attributes)
       newActivity.set("action",activityType);
       newActivity.set("activityMovie", activityMovie);
       newActivity.set("activityUser", Parse.User.current());
@@ -656,7 +650,6 @@ $(function() {
 
       newActivity.save(null,{
         success: function(result) {
-          console.log("newActivity save success",result);
         },
         error: function(result,error) {
           console.log("newActivity save error",error);
@@ -877,7 +870,6 @@ $(function() {
         url: 'http://api.themoviedb.org/3/tv/'+self.newMovie.get("tmdbId")+'/external_ids?api_key=773a2a626be46f73173ee702587528c5',        
         dataType: 'jsonp',
         success: function(jsonData) {
-          console.log("getImdbId jsonData",jsonData)
           resultsObj = jsonData;
 
           self.newMovie.set("imdbId",resultsObj.imdb_id);
@@ -937,7 +929,6 @@ $(function() {
       this.showQuestionPart2();
     },
     likeAnswerClicked: function(e) {
-      console.log("likeAnswerClicked");
       $.modal.close();
       var answerId = e.currentTarget.id;
       if(answerId == 'liked-it') {
