@@ -360,10 +360,13 @@ input#new-movie {
     vertical-align: top;
     border: 1px solid rgba(255, 255, 255, 0.5);
 }
-#activity-list .action-phrase {
+#activity-list .text-container2 {
     display: inline-block;
     margin-left: 10px;
     vertical-align: middle;
+}
+#activity-list .action-phrase {
+    font-size: 13px;
 }
 #activity-list .movie-title {
     display: block;
@@ -372,11 +375,39 @@ input#new-movie {
     color: #fff;
     margin-bottom: 0px;
 }
+
 #activity-list .date {
     font-size: 11px;
     color: #DDD;
     font-style: italic;
 }
+#activity-list .secondary-ctas { 
+    opacity: 0;
+    text-align: left;
+    transition: opacity .2s ease;
+}
+#activity-list li:hover .secondary-ctas { 
+    opacity: 1;
+}
+#activity-list .secondary-ctas a:first-child { 
+    padding-left: 0;
+}
+#activity-list .secondary-ctas a {
+    font-size: 13px;
+}
+#activity-list .secondary-ctas a.watch {
 
+  border: none;
+  border-left: 1px solid #eee;
+  background: none;
+  color: #ff6602;
+  padding: 0 6px 0 8px;
+  margin: 0;
+  width: auto;
+  border-radius: 0;
 
-
+}
+#activity-list .secondary-ctas a.watch:first-child {
+    border-left: 0;
+    padding-left: 0;
+}

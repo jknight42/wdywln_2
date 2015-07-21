@@ -1092,12 +1092,23 @@ var ActivityView = Parse.View.extend({
       var self = this;
       _.bindAll(this, 'render');
 
-      this.personName = this.model.get("activityUser").get("firstName")+" "+this.model.get("activityUser").get("lastName");
-      this.profileImage = this.model.get("activityUser").get("profileImage");
-      this.movieTitle = this.model.get("activityMovie").get("title");
-      this.moviePosterUrl = this.model.get("activityMovie").get("posterUrl");
-      this.readableDate = this.model.attributes.dateTime.toDateString();
-      this.reallyRender();
+      if((typeof this.model.get("activityUser") !== "undefined") && (typeof this.model.get("activityMovie") !== "undefined")) {
+
+        this.personName = this.model.get("activityUser").get("firstName")+" "+this.model.get("activityUser").get("lastName");
+        this.profileImage = this.model.get("activityUser").get("profileImage");
+        this.movieTitle = this.model.get("activityMovie").get("title");
+        this.moviePosterUrl = this.model.get("activityMovie").get("posterUrl");
+        this.ctaUrl = this.model.get("activityMovie").get("ctaUrl");
+        this.likedBy = this.model.get("activityMovie").get("likedBy");
+        this.youTubeId = this.model.get("activityMovie").get("youTubeId");
+        this.imdbId = this.model.get("activityMovie").get("imdbId");
+        this.readableDate = this.model.attributes.dateTime.toDateString();
+        this.reallyRender();
+      } else {
+        console.log("Error: missing activity data");
+        console.log("-- activityUser",this.model.get("activityUser"));
+        console.log("-- activityMovie",this.model.get("activityMovie"));
+      }
       // this.getUserData();
 
 
