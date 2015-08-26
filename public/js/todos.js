@@ -312,7 +312,8 @@ $(function() {
     events: {
       "click .log-out": "logOut",
       // "click h2": "retroFitMovies",
-      "click nav a": "changeMainView"
+      "click nav a": "changeMainView",
+      
     },
 
     el: ".content",
@@ -338,6 +339,7 @@ $(function() {
       this.getAllActivities();
 
     },
+   
     closeModal: function() {
       $("#trailer-box iframe").attr("src","about:blank");
 
@@ -420,7 +422,7 @@ $(function() {
         };
         this.yourQueuedMovies = new YourMovieList;
 
-        // Setup the query for the collection to look for Movies that the current user's friends liked
+      // Setup the query for the collection to look for Movies that the current user's friends liked
         this.yourQueuedMovies.query = new Parse.Query(Movie);
         this.yourQueuedMovies.query.containedIn("imdbId", yourQueueIdsArr);
           
@@ -482,6 +484,7 @@ $(function() {
           self.yourQueuedMovies.fetch({
             success: function(myObject) {
               // The object was refreshed successfully.
+
             },
             error: function(myObject, error) {
               // The object was not refreshed successfully.
@@ -1085,7 +1088,7 @@ var ActivityView = Parse.View.extend({
 
     // The DOM events specific to an item.
     events: {
-      
+      "click .like-btn": "likeBtnClicked"
     },
 
     initialize: function() {
@@ -1108,10 +1111,14 @@ var ActivityView = Parse.View.extend({
         console.log("Error: missing activity data");
         console.log("-- activityUser",this.model.get("activityUser"));
         console.log("-- activityMovie",this.model.get("activityMovie"));
+        console.log("-- activity model",this.model);
       }
       // this.getUserData();
 
 
+    },
+     likeBtnClicked: function () {
+      console.log("likeBtnClicked");
     },
     render: function() {
       // $(this.el).html(this.template(this.model.toJSON()));
